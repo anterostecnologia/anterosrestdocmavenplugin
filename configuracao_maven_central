@@ -1,0 +1,285 @@
+1) Criar uma senha em:
+   https://issues.sonatype.org/secure/Signup!default.jspa
+
+2) Criar um ticket solicitando que seja liberado pra adicionar novo projeto:
+   https://issues.sonatype.org/secure/CreateIssue.jspa?issuetype=21&pid=10134
+
+   Summary : Prepare new project to deploy maven central repository.
+   Description: Anteros-Core for Java.
+   Group id: br.com.anteros   (dominio do projeto)
+   Project url:  www.anteros.com.br
+   SCM Url: https://github.com/anterostecnologia/anteroscore.git
+   Username: nomeUsuario
+
+
+   Aguardar até o ticket ser resolvido:
+
+   Joel Orlina added a comment - 04/15/16 02:46 PM
+Configuration has been prepared, now you can:
+Deploy snapshot artifacts into repository https://oss.sonatype.org/content/repositories/snapshots
+Deploy release artifacts into the staging repository https://oss.sonatype.org/service/local/staging/deploy/maven2
+Promote staged artifacts into repository 'Releases'
+Download snapshot and release artifacts from group https://oss.sonatype.org/content/groups/public
+Download snapshot, release and staged artifacts from staging group https://oss.sonatype.org/content/groups/staging
+please comment on this ticket when you promoted your first release, thanks
+jorlina
+
+
+3) Instalar GPG2:
+
+    Mac:
+	   Package manager Homebrew: brew install gnupg gnupg2
+	   OU
+       Package manager MacPorts: sudo port install gnupg gnupg2
+
+       Install from GPGTools em:  https://gpgtools.org/
+
+	Windows:
+	   https://files.gpg4win.org/gpg4win-2.3.3.exe
+
+
+4) Criar e distribuir chave para assinar arquivos:
+
+http://central.sonatype.org/pages/working-with-pgp-signatures.html
+
+   gpg2 --gen-key
+   gpg2 --list-keys
+   gpg2 --keyserver hkp://pool.sks-keyservers.net --send-keys A6BAB25C
+
+   na pasta do usuário vc pode editar chave default na configuração:
+
+   /Users/USUARIO/.gnupg/gpg.conf
+
+   descomentar #default-key 621CC013
+
+   e adicionar a chave padrão para assinar os arquivos
+
+5) Alterar settings.xml na pasta .m2 (maven) dentro do /Users/USUARIO:
+
+   <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                          https://maven.apache.org/xsd/settings-1.0.0.xsd">
+	<localRepository />
+	<interactiveMode />
+	<usePluginRegistry />
+	<offline />
+	<pluginGroups />
+	<servers>
+		<server>
+			<id>nexus-snapshots</id>
+			<username>COLOCAR AQUI USUARIO CRIADO NO PASSO 1</username>
+			<password>SENHA DO PASSO 1</password>
+		</server>
+		<server>
+			<id>nexus-releases</id>
+			<username>COLOCAR AQUI USUARIO CRIADO NO PASSO 1</username>
+			<password>SENHA DO PASSO 1</password>
+		</server>
+	</servers>
+
+	<profiles>
+		<profile>
+  			<id>gpg</id>
+  				<activation>
+    				<activeByDefault>true</activeByDefault>
+  				</activation>
+  				<properties>
+    				<gpg.useagent>true</gpg.useagent>
+    				<gpg.executable>gpg2</gpg.executable>
+  				</properties>
+		</profile>
+	</profiles>
+   </settings>
+
+
+
+6) Configurar pom.xml do projeto para fazer deploy no servidor configurado acima:
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>br.com.anteros</groupId>
+	<artifactId>Anteros-Persistence-Core</artifactId>
+	<version>1.0.16</version>
+
+	<properties>
+		<java.versao>1.6</java.versao>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.6</maven.compiler.source>
+		<maven.compiler.target>1.6</maven.compiler.target>
+	</properties>
+
+	<name>Anteros Persistence Core</name>
+	<description>
+         Anteros Persistence Core for Java.
+    </description>
+	<organization>
+		<name>Anteros Tecnologia</name>
+		<url>http://www.anteros.com.br</url>
+	</organization>
+	<url>http://github.com/anterostecnologia</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:git:git@github.com:anterostecnologia/anterospersistencecore.git</connection>
+		<developerConnection>scm:git:git@github.com:anterostecnologia/anterospersistencecore.git</developerConnection>
+		<url>https://github.com/anterostecnologia/anterospersistencecore</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>edson</id>
+			<name>Edson Martins</name>
+			<email>edsonmartins2005@gmail.com</email>
+			<organization>Anteros Tecnologia</organization>
+			<organizationUrl>http://www.anteros.com.br</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>br.com.anteros</groupId>
+			<artifactId>Anteros-Core</artifactId>
+			<version>[1.0.0,)</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>br.com.anteros</groupId>
+			<artifactId>Anteros-Bean-Validation-Api</artifactId>
+			<version>[1.0.0,)</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>maven-central</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.3</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>nexus-releases</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.3</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>nexus-releases</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+				</plugins>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-compiler-plugin</artifactId>
+							<version>3.1</version>
+							<configuration>
+								<target>${java.versao}</target>
+								<source>${java.versao}</source>
+							</configuration>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-source-plugin</artifactId>
+							<executions>
+								<execution>
+									<id>attach-sources</id>
+									<goals>
+										<goal>jar</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-javadoc-plugin</artifactId>
+							<executions>
+								<execution>
+									<id>attach-javadocs</id>
+									<goals>
+										<goal>jar</goal>
+									</goals>
+
+								</execution>
+							</executions>
+							<configuration>
+								<additionalparam>-Xdoclint:none</additionalparam>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+
+			<distributionManagement>
+				<repository>
+					<id>nexus-releases</id>
+					<name>Nexus Release Repository</name>
+					<url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+			</distributionManagement>
+		</profile>
+	</profiles>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>joda-time</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>2.3</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>
+
+7) Para fazer o deploy rodar com os seguintes parâmetros no maven:
+
+    source:jar javadoc:jar deploy -P maven-central
+
+    obs: caso de algum problema e não encontrar o gpg2 command
+         definir um PATH em Enviroment da configuração
+          PATH = /usr/local/MacGPG2/bin:/Applications/SourceTree.app/Contents/Resources/bin:/Applications/SourceTree.app/Contents/Resources/bin/gpg:/opt/local/bin:/opt/local/sbin:/Users/edson/gradle-2.12/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/opt/X11/bin:/Applications/instantclient_11_2:/Users/edson/apache-maven-3.3.3/bin
+
+
+
+
+
