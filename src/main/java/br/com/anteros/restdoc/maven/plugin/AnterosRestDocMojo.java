@@ -248,6 +248,9 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			Writer writer = new FileWriter(itemsFile);
 			SnippetGenerator.generate(urlBase, writer, classDescriptors);
 			writer.flush();
+			writer.close();
+			
+			fis.close();
 			/**
 			 * Executa geração dos arquivos da documentação a partir dos
 			 * arquivos .adoc (asciidoc)
