@@ -1,4 +1,0 @@
-|${parameterName}
-|${parameterType}
-|${parameterOptional}
-|${parameterDescription}

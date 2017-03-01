@@ -4,7 +4,7 @@
 
 <plugin>
   <name>Anteros Rest Documentation Maven Plugin</name>
-  <description>The plugin maven of Anteros for generation Rest Documentation Spring/JAX-RS.</description>
+  <description>The plugin maven of Anteros.</description>
   <groupId>br.com.anteros</groupId>
   <artifactId>Anteros-RestDoc-Maven-Plugin</artifactId>
   <version>1.0.0</version>

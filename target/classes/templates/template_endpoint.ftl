@@ -1,3 +1,0 @@
-=== ${endpointDescription}
-`${httpMethod} ${urlMapping}`
-

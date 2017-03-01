@@ -18,7 +18,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

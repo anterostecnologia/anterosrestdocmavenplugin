@@ -1,3 +1,0 @@
-|${parameterName}
-|${parameterType}
-|${parameterDescription}
