@@ -67,7 +67,7 @@ public class SnippetGenerator {
 			TemplateException {
 		StringBuilder result = new StringBuilder();
 		Configuration configuration = new Configuration();
-		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, TEMPLATES));
+		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		for (ClassDescriptor cld : classDescriptors) {
 
 			/**

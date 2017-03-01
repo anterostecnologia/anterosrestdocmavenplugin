@@ -159,7 +159,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		if (sourceDocumentName==null){
 			sourceDocumentName = "index.adoc";
 			try {
-				InputStream openStream = ResourceUtils.getResourceAsStream("templates/template_index.adoc");
+				InputStream openStream = ResourceUtils.getResourceAsStream("template_index.adoc");
 				FileOutputStream fos = new FileOutputStream(new File(sourceDirectory+File.separator+sourceDocumentName));
 				br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
 				fos.flush();
