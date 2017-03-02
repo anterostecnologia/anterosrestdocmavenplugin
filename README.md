@@ -99,9 +99,9 @@ Tabela dos principais parâmetros que podem ser configurados, os demais podem se
 | attributes |  Um documento asciidoc aceita passagem de atributos. O documento padrão gerado pelo Anteros REST Documentation aceita um atributo **documentTitle** onde vc pode passar o título do documento. Caso vc tenha criado um documento asciidoc personalizado pode passar atributos customizados para ele.
 
 
-Para a formatação do documento de saída pelo asciidoc você pode usar qualquer parâmetro/atributo de acordo com a documentação do [Asciidoctor Maven Plugin](https://github.com/asciidoctor/asciidoctor-maven-plugin) 
+Para a formatação do documento de saída pelo **asciidoc** você pode usar qualquer parâmetro/atributo de acordo com a documentação do [Asciidoctor Maven Plugin](https://github.com/asciidoctor/asciidoctor-maven-plugin).
 
-No caso de criar um documento asciidoc personalizado o mesmo deverá conter obrigatoriamente um include para o arquivo de detalhe que será gerado com o nome de items.adoc. O arquivo de detalhe será gerado no mesmo diretório de fontes dos documentos(sourceDirectory).
+No caso de criar um documento **asciidoc** personalizado o mesmo deverá conter obrigatoriamente um *include* para o arquivo de detalhe que será gerado com o nome de **items.adoc**. O arquivo de detalhe será gerado no mesmo diretório de fontes dos documentos(sourceDirectory).
 
 **include::items.adoc[]**
 
