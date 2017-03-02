@@ -11,7 +11,7 @@ Usando o exemplo a seguir, a ferramenta reconhecerá um **endPoint** ("/pessoa/n
 
 ```java
 /**
- * Examplo Rest com Spring
+ * Exemplo Rest com Spring
  */
 @Controller
 @RequestMapping("/pessoa")
@@ -30,7 +30,7 @@ public class Exemplo {
 }
 ```
 
-Com base nas informações coletadas sobre os **endPoint's** a ferramenta irá gerar a documentação usando o asciidoc. A saida para a documentação pode ser configurada com os formatos aceitos pelo asciidoc.Ex: HTML,PDF,etc. Se a documentação gerada for no formato HTML irá conter campos para informação dos parâmetros e execução de uma chamada ao **endPoint** (serviço REST) permitindo visualizar o resultado.
+Com base nas informações coletadas sobre os **endPoint's** a ferramenta irá gerar a documentação usando o asciidoc. A saída para a documentação pode ser configurada com os formatos aceitos pelo asciidoc.Ex: HTML,PDF,etc. Se a documentação gerada for no formato HTML irá conter campos para informação dos parâmetros e execução de uma chamada ao **endPoint** (serviço REST) permitindo visualizar o resultado.
 
 
 ## Configuração 
