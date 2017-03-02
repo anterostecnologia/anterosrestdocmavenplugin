@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2014 The Calrissian Authors
+ * Copyright 2014 The Calrissian Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,49 +15,44 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.util;
 
-
-import com.sun.javadoc.AnnotationDesc;
-import com.sun.javadoc.AnnotationValue;
+import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
+import com.sun.javadoc.AnnotationDesc;
+import com.sun.javadoc.AnnotationValue;
 
 public class AnnotationUtils {
 
-    public static String getAnnotationName(AnnotationDesc annotation) {
-        try{
-            return annotation.annotationType().qualifiedName();
-        } catch (ClassCastException e)
-        {
-            return null;
-        }
-    }
+	public static String getAnnotationName(AnnotationDesc annotation) {
+		try {
+			return annotation.annotationType().qualifiedName();
+		} catch (ClassCastException e) {
+			return null;
+		}
+	}
 
-    public static List<String> getElementValue(AnnotationDesc annotation, String key) {
-        for (AnnotationDesc.ElementValuePair element : annotation.elementValues())
-            if (element.element().name().equals(key)) {
-                return resolveAnnotationValue(element.value());
-            }
+	public static List<String> getElementValue(AnnotationDesc annotation, String key) {
+		for (AnnotationDesc.ElementValuePair element : annotation.elementValues())
+			if (element.element().name().equals(key)) {
+				return resolveAnnotationValue(element.value());
+			}
 
-        return emptyList();
-    }
+		return emptyList();
+	}
 
-    private static List<String> resolveAnnotationValue(AnnotationValue value) {
-        List<String> retVal = new ArrayList<String>();
-        /**
-         * TODO using recursion here is probably flawed.
-         */
-        if (value.value() instanceof AnnotationValue[])
-            for (AnnotationValue annotationValue : (AnnotationValue[])value.value())
-                retVal.addAll(resolveAnnotationValue(annotationValue));
-        else {
-            retVal.add(value.value().toString());
+	private static List<String> resolveAnnotationValue(AnnotationValue value) {
+		List<String> retVal = new ArrayList<String>();
 
-        }
+		if (value.value() instanceof AnnotationValue[])
+			for (AnnotationValue annotationValue : (AnnotationValue[]) value.value())
+				retVal.addAll(resolveAnnotationValue(annotationValue));
+		else {
+			retVal.add(value.value().toString());
 
-        return retVal;
-    }
+		}
 
+		return retVal;
+	}
 }

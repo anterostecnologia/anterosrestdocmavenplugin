@@ -1,3 +1,18 @@
+/*******************************************************************************
+ *  Copyright 2017 Anteros Tecnologia
+ *   
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *  
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.util;
 
 import java.util.HashMap;
@@ -6,25 +21,6 @@ import java.util.Locale;
 import br.com.anteros.core.utils.StringUtils;
 
 public class Curl {
-	@SuppressWarnings("unused")
-	public static void main(String[] args) {
-
-		Curl ac = new Curl("www.google.com");
-		ac.header("mail", "mos@aaa.com");
-		ac.header("userId", "7DDDgfsdf");
-		ac.parameter("mm", "add&");
-		ac.parameter("u", 12444);
-		ac.parameter("m", 2002);
-		ac.basicAuthentication("edson", "teste");
-
-		ac.cookie("cookie1", "value1");
-		ac.cookie("cookie2", "val2");
-		ac.enableResponseLogging().enableVerbose();
-		ac.timeOut(100);
-		ac.type(Type.POST);
-
-		System.out.println(ac.toCurl());
-	}
 
 	public enum Type {
 
@@ -81,8 +77,8 @@ public class Curl {
 		}
 		return this;
 	}
-	
-	public Curl body(String body){
+
+	public Curl body(String body) {
 		this.body = body;
 		return this;
 	}
@@ -148,8 +144,7 @@ public class Curl {
 		addBody(builder);
 		return builder.toString();
 	}
-	
-	
+
 	public String toUrl() {
 		StringBuilder builder = new StringBuilder();
 		addUrlAndParameters(builder);
@@ -161,11 +156,11 @@ public class Curl {
 	// ##############################################################
 
 	private void addBody(StringBuilder builder) {
-		if (StringUtils.isNotEmpty(body)){
-		    builder.append("-d \"");
-		    builder.append(body);
-		    builder.append("\" ");
-		}		
+		if (StringUtils.isNotEmpty(body)) {
+			builder.append("-d \"");
+			builder.append(body);
+			builder.append("\" ");
+		}
 	}
 
 	private void addHeaders(StringBuilder builder) {
@@ -176,7 +171,6 @@ public class Curl {
 		}
 	}
 
-	
 	private void addCookies(StringBuilder builder) {
 		if (mCookies.size() > 0) {
 			builder.append("-c \"");
@@ -207,8 +201,8 @@ public class Curl {
 
 	private void addUrlAndParameters(StringBuilder builder) {
 		StringBuilder tmp = new StringBuilder();
-		tmp.append(mUrl).append(endPoint==null?"":endPoint);
-		
+		tmp.append(mUrl).append(endPoint == null ? "" : endPoint);
+
 		if (!mParameters.isEmpty()) {
 			tmp.append("?");
 			for (String key : mParameters.keySet()) {
@@ -216,7 +210,7 @@ public class Curl {
 			}
 			tmp.deleteCharAt(tmp.length() - 1);
 		}
-		
+
 		builder.append(String.format(Locale.US, FORMATTED_URL, tmp.toString()));
 	}
 

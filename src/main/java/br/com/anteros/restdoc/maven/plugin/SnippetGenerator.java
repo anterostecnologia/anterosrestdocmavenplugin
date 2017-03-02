@@ -1,3 +1,18 @@
+/*******************************************************************************
+ *  Copyright 2017 Anteros Tecnologia
+ *   
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *  
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin;
 
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.CURL;
@@ -15,7 +30,6 @@ import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.PATH_PARA
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.QUERY_PARAMETERS_ITEM;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.RESOURCE_DESCRIPTION;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.RESOURCE_NAME;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATES;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_ENDPOINT;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_PATH_PARAMETERS;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_PATH_PARAMETERS_ITEM;
@@ -50,7 +64,6 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateNotFoundException;
 
-
 /**
  * 
  * @author Edson Martins
@@ -65,7 +78,6 @@ public class SnippetGenerator {
 	public static void generate(String baseUrl, Writer w, ClassDescriptor... classDescriptors)
 			throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException,
 			TemplateException {
-		StringBuilder result = new StringBuilder();
 		Configuration configuration = new Configuration();
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		for (ClassDescriptor cld : classDescriptors) {
@@ -148,7 +160,6 @@ public class SnippetGenerator {
 				/**
 				 * Request body
 				 */
-
 				if (endpoint.getRequestBody() != null) {
 					template = configuration.getTemplate(TEMPLATE_REQUEST_BODY);
 					dataModel = new HashMap<String, Object>();
@@ -162,7 +173,6 @@ public class SnippetGenerator {
 				/**
 				 * Request example
 				 */
-
 				Curl curl = Curl.of(baseUrl).endPoint(endpoint.getPath()).basicAuthentication(USER, PASSWORD)
 						.enableResponseLogging().timeOut(300)
 						.type(Curl.Type.valueOf(endpoint.getHttpMethod().toUpperCase()));
@@ -180,10 +190,7 @@ public class SnippetGenerator {
 				dataModel.put(CURL, curl.toCurl());
 				dataModel.put(HTTP_URL, curl.toUrl());
 				template.process(dataModel, w);
-
 			}
-
 		}
 	}
-
 }

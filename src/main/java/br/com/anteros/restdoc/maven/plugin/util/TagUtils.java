@@ -21,40 +21,39 @@ import com.sun.javadoc.Doc;
 import com.sun.javadoc.ParamTag;
 import com.sun.javadoc.Tag;
 
-
 public class TagUtils {
 
-    public static final String IGNORE_TAG = "ignore";
-    public static final String CONTEXT_TAG = "contextPath";
-    public static final String NAME_TAG = "name";
-    public static final String PATHVAR_TAG = "pathVar";
-    public static final String QUERYPARAM_TAG = "queryParam";
-    public static final String REQUESTBODY_TAG = "requestBody";
+	public static final String IGNORE_TAG = "ignore";
+	public static final String CONTEXT_TAG = "contextPath";
+	public static final String NAME_TAG = "name";
+	public static final String PATHVAR_TAG = "pathVar";
+	public static final String QUERYPARAM_TAG = "queryParam";
+	public static final String REQUESTBODY_TAG = "requestBody";
 
-    public static String findParamText(Tag[] tags, String name) {
-        for (Tag tag : tags)
-            if (tag.text().trim().equals(name) || tag.text().trim().startsWith(name + " "))
-                return tag.text().trim().substring(name.length()).trim();
+	public static String findParamText(Tag[] tags, String name) {
+		for (Tag tag : tags)
+			if (tag.text().trim().equals(name) || tag.text().trim().startsWith(name + " "))
+				return tag.text().trim().substring(name.length()).trim();
 
-        return null;
-    }
-    
-    public static String findParamText(ParamTag[] tags, String name) {
-        for (ParamTag tag : tags)
-            if (tag.parameterName().trim().equals(name))
-                return tag.parameterComment();
+		return null;
+	}
 
-        return null;
-    }
+	public static String findParamText(ParamTag[] tags, String name) {
+		for (ParamTag tag : tags)
+			if (tag.parameterName().trim().equals(name))
+				return tag.parameterComment();
 
-    public static String firstSentence(Doc doc) {
-        Tag[] tags = doc.firstSentenceTags();
-        StringBuilder sb = new StringBuilder();
-        if (!isEmpty(tags)) {
-            for (Tag tag : tags)
-                sb.append(tag.text());
-        }
+		return null;
+	}
 
-        return sb.toString();
-    }
+	public static String firstSentence(Doc doc) {
+		Tag[] tags = doc.firstSentenceTags();
+		StringBuilder sb = new StringBuilder();
+		if (!isEmpty(tags)) {
+			for (Tag tag : tags)
+				sb.append(tag.text());
+		}
+
+		return sb.toString();
+	}
 }

@@ -1,3 +1,18 @@
+/*******************************************************************************
+ *  Copyright 2017 Anteros Tecnologia
+ *   
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *  
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin;
 
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ANTEROS_JSON;
@@ -64,36 +79,63 @@ import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class AnterosRestDocMojo extends AsciidoctorMojo {
-
+	
+	/**
+	 * Diretório de saída do arquivo gerado (.html, .pdf, etc.)
+	 */
 	@Parameter(defaultValue = "${project.build.directory}", property = "outputDir", required = true)
 	private File outputDirectory;
 
+	/**
+	 * Projeto maven
+	 */
 	@Parameter(defaultValue = "${project}")
 	private MavenProject project = null;
 
+	/**
+	 * Nome do projeto
+	 */
 	@Parameter(defaultValue = "${project.name}", required = true)
 	private String projectDisplayName;
 
+	/**
+	 * Diretórios com os códigos fonte
+	 */
 	@Parameter(defaultValue = "${project.compileSourceRoots}")
 	private List<String> compileSourceRoots;
 
+	/**
+	 * Diretórios com os códigos fonte compilados
+	 */
 	@Parameter(defaultValue = "${project.compileClasspathElements}")
 	private List<String> classpathElements;
 
+	/**
+	 * Nome dos pacotes para procurar os controllers
+	 */
 	@Parameter(required = true)
 	private List<String> packageScanEndpoints = new ArrayList<String>();
 
+	/**
+	 * Base para gerar as URL de execução dos exemplos
+	 */
 	@Parameter(required = true)
 	private String urlBase;
 
+	/**
+	 * Verifica se deve incluir o código fonte das dependências
+	 */
 	@Parameter(defaultValue = "false")
 	private boolean includeDependencySources;
 
+	/**
+	 * Diretório para fazer cache do código fonte
+	 */
 	@Parameter(defaultValue = "${project.build.directory}/distro-javadoc-sources")
 	private File sourceDependencyCacheDir;
 
 	/**
-	 * List of included dependency-source patterns. Example:
+	 * Lista para incluir o código fonte das dependências. Exemplo:
 	 * <code>org.apache.maven:*</code>
 	 *
 	 * @see #includeDependencySources
@@ -102,7 +144,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	private List<String> dependencySourceIncludes;
 
 	/**
-	 * List of excluded dependency-source patterns. Example:
+	 * Lista para excluir o código fonte das dependências. Exemplo:
 	 * <code>org.apache.maven.shared:*</code>
 	 *
 	 * @see #includeDependencySources
@@ -110,19 +152,26 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	@Parameter
 	private List<String> dependencySourceExcludes;
 
+	/**
+	 * Repositório local
+	 */
 	@Parameter(property = "localRepository")
 	private ArtifactRepository localRepository;
 
+	/**
+	 * Repositórios remoto
+	 */
 	@Parameter(property = "project.remoteArtifactRepositories")
 	private List<ArtifactRepository> remoteRepositories;
 
+	/**
+	 * Verifica se deve incluir o código fonte das dependências transitivas
+	 */
 	@Parameter(defaultValue = "false")
 	private boolean includeTransitiveDependencySources;
 
 	/**
 	 * Archiver manager
-	 *
-	 * @since 2.5
 	 */
 	@Component
 	private ArchiverManager archiverManager;
@@ -135,8 +184,6 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 	/**
 	 * Used to resolve artifacts of aggregated modules
-	 *
-	 * @since 2.1
 	 */
 	@Component
 	private ArtifactMetadataSource artifactMetadataSource;
@@ -147,29 +194,35 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	@Component
 	private ArtifactResolver resolver;
 
+	/**
+	 * 
+	 */
 	@Parameter(property = "reactorProjects", readonly = true)
 	private List<MavenProject> reactorProjects;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		
+
 		/**
-		 * Se não informar o nome do documento .adoc principal
-		 * copiamos o padrão para a pasta sourceDirectory.
+		 * Se não informar o nome do documento .adoc principal copiamos o padrão
+		 * para a pasta sourceDirectory.
 		 */
-		if (sourceDocumentName==null){
+		if (sourceDocumentName == null) {
 			sourceDocumentName = "index.adoc";
 			try {
 				InputStream openStream = ResourceUtils.getResourceAsStream("template_index.adoc");
-				FileOutputStream fos = new FileOutputStream(new File(sourceDirectory+File.separator+sourceDocumentName));
+				FileOutputStream fos = new FileOutputStream(
+						new File(sourceDirectory + File.separator + sourceDocumentName));
 				br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
 				fos.flush();
 				fos.close();
 				openStream.close();
 			} catch (IOException e) {
-				throw new MojoExecutionException("Não foi informado o nome do documento principal para gerar a documentação e não foi encontrado o padrão.",e);
+				throw new MojoExecutionException(
+						"Não foi informado o nome do documento principal para gerar a documentação e não foi encontrado o padrão.",
+						e);
 			}
 		}
-		
+
 		List<String> dependencySourcePaths = null;
 		if (includeDependencySources) {
 			try {
@@ -249,8 +302,9 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			SnippetGenerator.generate(urlBase, writer, classDescriptors);
 			writer.flush();
 			writer.close();
-			
+
 			fis.close();
+
 			/**
 			 * Executa geração dos arquivos da documentação a partir dos
 			 * arquivos .adoc (asciidoc)
