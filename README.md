@@ -1,6 +1,6 @@
 # Anteros Rest Documentation
 
-O **Anteros Rest Documentation** é um plugin maven _open source_ baseado no [Spring & JAX-RS Rest Doclet](https://github.com/calrissian/rest-doclet) para geração automática de documentação de API's REST tanto para Spring como para JAX-RS. No entanto o projeto além de utilizar um Doclet customizado para leitura do Javadoc como no outro projeto, ele combina funcionalidades encontradas no [Apache Maven Javadoc Plugin](https://maven.apache.org/plugins/maven-javadoc-plugin/) e ainda herda do [Asciidoctor Maven Plugin](https://github.com/asciidoctor/asciidoctor-maven-plugin) o que permitiu que combinassemos tudo isto em uma única ferramenta e sem perder a flexibilidade.
+O **Anteros Rest Documentation** é um plugin maven _open source_ baseado no [Spring & JAX-RS Rest Doclet](https://github.com/calrissian/rest-doclet) para geração automática de documentação de API's REST tanto para Spring como para JAX-RS. No entanto o projeto além de utilizar um Doclet customizado para leitura do Javadoc como no outro projeto, ele combina funcionalidades encontradas no [Apache Maven Javadoc Plugin](https://maven.apache.org/plugins/maven-javadoc-plugin/) e ainda herda do [Asciidoctor Maven Plugin](https://github.com/asciidoctor/asciidoctor-maven-plugin) a capacidade de geração documentação em diversos formatos a partir de uma arquivo asciidoc. Isso nos permitiu que combinar todas a necessidades em uma única ferramenta sem perder a flexibilidade.
 
 
 ## Introdução
