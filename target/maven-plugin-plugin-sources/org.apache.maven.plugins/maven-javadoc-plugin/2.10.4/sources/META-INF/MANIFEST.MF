@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Built-By: Robert Scholte
-Build-Jdk: 1.7.0_55
-Created-By: Apache Maven 3.3.9
-Archiver-Version: Plexus Archiver
-
