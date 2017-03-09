@@ -106,6 +106,12 @@ No caso de criar um documento **asciidoc** personalizado o mesmo deverá conter 
 **include::items.adoc[]**
 
 
+## Exemplo de documentação
+
+Exemplos de documentações geradas utilizando o plugin. 
+
+[html](https://cdn.rawgit.com/anterostecnologia/anterosrestdocmavenplugin/771654e0/example/anteros_example_index.html) e [pdf](example/Anteros Example REST API Documentation.pdf)
+
 
 
 ## Licença ##
