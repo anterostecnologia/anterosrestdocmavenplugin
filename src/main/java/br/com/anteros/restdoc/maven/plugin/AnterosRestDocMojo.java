@@ -79,7 +79,7 @@ import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class AnterosRestDocMojo extends AsciidoctorMojo {
-	
+
 	/**
 	 * Diretório de saída do arquivo gerado (.html, .pdf, etc.)
 	 */
@@ -306,12 +306,35 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			fis.close();
 
 			/**
+			 * Altera o CSS default do plugin para o tema azul
+			 */
+
+			if (!attributes.containsKey("stylesheet")) {
+				File stylesheetFile = new File(filePath, "asciidoc_stylesheet.css");
+
+				try {
+					InputStream openStream = ResourceUtils.getResourceAsStream("asciidoc_stylesheet.css");
+					FileOutputStream fos = new FileOutputStream(stylesheetFile);
+					br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
+					fos.flush();
+					fos.close();
+					openStream.close();
+				} catch (IOException e) {
+					throw new MojoExecutionException(
+							"Não foi possível copiar o template padrão de CSS.", e);
+				}
+
+				this.attributes.put("stylesheet", stylesheetFile.getAbsolutePath());
+			}
+
+			/**
 			 * Executa geração dos arquivos da documentação a partir dos
 			 * arquivos .adoc (asciidoc)
 			 */
 			super.execute();
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new MojoExecutionException("Não foi possível gerar a documentação da API Rest.", e);
 		}
 	}
