@@ -210,6 +210,9 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			sourceDocumentName = "index.adoc";
 			try {
 				InputStream openStream = ResourceUtils.getResourceAsStream("template_index.adoc");
+				if (!sourceDirectory.exists())
+					sourceDirectory.mkdirs();
+
 				FileOutputStream fos = new FileOutputStream(
 						new File(sourceDirectory + File.separator + sourceDocumentName));
 				br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
@@ -256,6 +259,8 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 		if (packageScanEndpoints != null) {
 			for (String p : packageScanEndpoints) {
+				if (p.contains("*"))
+					throw new MojoExecutionException("Pacotes não podem conter asteriscos(*) no nome " + p);
 				parameters.add(p);
 			}
 		}
@@ -276,9 +281,14 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		 * Lê o arquivo JSON contendo informações sobre os endpoints lidos com o
 		 * javadoc via AnterosRestDoclet(Doclet customizado).
 		 */
-		File file = new File(temporaryDirectoryJson + File.separator + ANTEROS_JSON);
+		File temporaryJsonPath = new File(temporaryDirectoryJson);
+		if (!temporaryJsonPath.exists())
+			temporaryJsonPath.mkdirs();
+
+		File file = new File(temporaryJsonPath + File.separator + ANTEROS_JSON);
 		FileInputStream fis;
 		try {
+
 			fis = new FileInputStream(file);
 			/**
 			 * Le os dados do JSON gerado a partir do javadoc.

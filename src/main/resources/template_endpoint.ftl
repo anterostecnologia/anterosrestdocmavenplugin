@@ -1,6 +1,6 @@
 === ${endpointDescription}
 [source,http]
 ----
-`${httpMethod} ${urlMapping}`
+${httpMethod} ${urlMapping}
 ----
 

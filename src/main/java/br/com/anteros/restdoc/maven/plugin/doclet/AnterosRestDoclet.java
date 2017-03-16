@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.javadoc.Doclet;
 import com.sun.javadoc.RootDoc;
+import com.sun.tools.doclets.internal.toolkit.util.DocletAbortException;
 
 import br.com.anteros.restdoc.maven.plugin.doclet.collector.Collector;
 import br.com.anteros.restdoc.maven.plugin.doclet.collector.jaxrs.JaxRSCollector;
@@ -55,8 +56,9 @@ public class AnterosRestDoclet extends Doclet {
 	 * @return true on success.
 	 */
 	public static boolean start(RootDoc root) {
-		String tempFile = "";
+		String jsonTempFile = "";
 		String[][] options = root.options();
+		StringBuilder sourcePath = new StringBuilder();
 
 		/**
 		 * Procura no sourcepath qual o local para salvar o arquivo com o json
@@ -64,8 +66,11 @@ public class AnterosRestDoclet extends Doclet {
 		 */
 		for (String[] option : options) {
 			if (option[0].equals(SOURCEPATH_OPTION)) {
+				sourcePath.append(option[1]);
 				String[] split = option[1].split(File.pathSeparator);
-				tempFile = split[split.length - 1];
+				jsonTempFile = split[split.length - 1];
+				String tmp = ":" + jsonTempFile;
+				sourcePath.delete(option[1].indexOf(tmp), option[1].indexOf(tmp) + tmp.length());
 				break;
 			}
 		}
@@ -73,10 +78,10 @@ public class AnterosRestDoclet extends Doclet {
 		/**
 		 * Verifica e cria o arquivo json
 		 */
-		File directory = new File(tempFile);
+		File directory = new File(jsonTempFile);
 		directory.mkdirs();
 
-		tempFile = tempFile + File.separator + ANTEROS_JSON;
+		jsonTempFile = jsonTempFile + File.separator + ANTEROS_JSON;
 
 		/**
 		 * Busca todos as classes do tipo controller para serem adicionados ao
@@ -86,6 +91,9 @@ public class AnterosRestDoclet extends Doclet {
 
 		for (Collector collector : collectors)
 			classDescriptors.addAll(collector.getDescriptors(root));
+
+		if (classDescriptors.isEmpty())
+			throw new DocletAbortException("Não foram encontradas classes contendo documentação no path " + sourcePath);
 
 		/**
 		 * Ordena as classes pelo nome
@@ -103,7 +111,7 @@ public class AnterosRestDoclet extends Doclet {
 		 */
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			File file = new File(tempFile);
+			File file = new File(jsonTempFile);
 			FileOutputStream fos = new FileOutputStream(file);
 			mapper.writeValue(fos, classDescriptors.toArray(new ClassDescriptor[] {}));
 			fos.flush();

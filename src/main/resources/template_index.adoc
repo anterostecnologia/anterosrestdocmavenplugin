@@ -8,8 +8,6 @@
 :sectlinks:
 :sectnums:
 :linkattrs:
-:source-highlighter: highlightjs
-
 
 [[overview]]
 = Overview
@@ -22,6 +20,7 @@
 
 An example of static AsciiDoc.
 
+[cols="20%,80%"]
 |===
 | Verb | Usage
 
@@ -43,6 +42,7 @@ An example of static AsciiDoc.
 
 Spring pagination facilities offer following:
 
+[cols="20%,15%,10%,55%"]
 |===
 | Path | Type | Optional | Description
 

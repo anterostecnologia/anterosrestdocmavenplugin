@@ -188,7 +188,7 @@ public class SnippetGenerator {
 				template = configuration.getTemplate(TEMPLATE_REQUEST_EXAMPLE);
 				dataModel = new HashMap<String, Object>();
 				dataModel.put(CURL, curl.toCurl());
-				dataModel.put(HTTP_URL, curl.toUrl());
+				dataModel.put(HTTP_URL, curl.toUrl().replace("\"", ""));
 				template.process(dataModel, w);
 			}
 		}
