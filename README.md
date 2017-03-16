@@ -83,9 +83,9 @@ Configure o plugin para executar como no exemplo a seguir:
 
 Tabela dos principais parâmetros que podem ser configurados, os demais podem ser consultados na documentação do asciidoc:
 
---		
-| Nome | Descrição 
-| :---         |     :---:      
+		
+| Nome | Descrição |
+| ---  | --- |      
 | backend   | Formato de saida do documento final conforme documentação asciidoc. Ex: html, pdf, etc
 | doctype     | Tipo de documento conforme documentação asciidoc.  
 | sourceDirectory | Nome do diretório onde estão os documentos para geração da documentação final. Padrão: ${basedir}/src/main/asciidoc
@@ -110,7 +110,7 @@ No caso de criar um documento **asciidoc** personalizado o mesmo deverá conter 
 
 Exemplos de documentações geradas utilizando o plugin. 
 
-[html](https://cdn.rawgit.com/anterostecnologia/anterosrestdocmavenplugin/771654e0/example/anteros_example_index.html) e [pdf](example/Anteros Example REST API Documentation.pdf)
+[html](https://cdn.rawgit.com/anterostecnologia/anterosrestdocmavenplugin/771654e0/example/anteros_example_index.html) e [pdf]('example/AnterosExampleRESTAPIDocumentation.pdf')
 
 
 
@@ -120,7 +120,7 @@ Apache 2.0
 
 http://www.apache.org/licenses/LICENSE-2.0
 
-
 <center>
-![alt text](https://avatars0.githubusercontent.com/u/16067889?v=3&u=ab2eb482a16fd90a17d7ce711885f0bdc0640997&s=64)  
+![alt text](https://avatars0.githubusercontent.com/u/16067889?v=3&u=ab2eb482a16fd90a17d7ce711885f0bdc0640997&s=64)  
 Anteros Tecnologia
+
