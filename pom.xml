@@ -4,7 +4,7 @@
 
 	<groupId>br.com.anteros</groupId>
 	<artifactId>Anteros-RestDoc-Maven-Plugin</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Anteros Rest Documentation Maven Plugin</name>
