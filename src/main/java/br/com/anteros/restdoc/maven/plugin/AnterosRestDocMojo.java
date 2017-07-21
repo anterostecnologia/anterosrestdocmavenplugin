@@ -24,7 +24,7 @@ import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.PROTECTED
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SOURCEPATH_OPTION;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SPRING_WEB_CONTROLLER;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TARGET;
-import static org.apache.maven.plugin.javadoc.JavadocUtil.isNotEmpty;
+import static br.com.anteros.restdoc.maven.plugin.util.JavadocUtil.isNotEmpty;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,14 +49,12 @@ import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.artifact.resolver.filter.IncludesArtifactFilter;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.javadoc.AbstractJavadocMojo;
-import org.apache.maven.plugin.javadoc.resolver.ResourceResolver;
-import org.apache.maven.plugin.javadoc.resolver.SourceResolverConfig;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugins.javadoc.AbstractJavadocMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.MavenReportException;
 import org.apache.maven.shared.artifact.filter.PatternExcludesArtifactFilter;
@@ -70,6 +68,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.anteros.core.utils.ResourceUtils;
 import br.com.anteros.restdoc.maven.plugin.doclet.AnterosRestDoclet;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
+import br.com.anteros.restdoc.maven.plugin.util.ResourceResolver;
+import br.com.anteros.restdoc.maven.plugin.util.SourceResolverConfig;
 
 /**
  * 
