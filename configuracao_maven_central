@@ -1,3 +1,11 @@
+PATH = /usr/local/MacGPG2/bin
+
+source:jar javadoc:jar deploy -P maven-central
+source:jar javadoc:jar deploy -P bintray
+source:jar javadoc:jar install -P local
+
+
+
 1) Criar uma senha em:
    https://issues.sonatype.org/secure/Signup!default.jspa
 
