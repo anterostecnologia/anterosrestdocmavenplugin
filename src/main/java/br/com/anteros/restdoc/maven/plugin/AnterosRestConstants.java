@@ -25,7 +25,7 @@ public class AnterosRestConstants {
 
 	public static final String ANTEROS_JSON = "anteros.json";
 	public static final String ITEMS_ADOC = "items.adoc";
-	public static final String SPRING_WEB_CONTROLLER = "br.com.anteros.springWeb.controller";
+	public static final String SPRING_WEB_CONTROLLER = "br.com.anteros.spring.web.resource";
 	public static final String PROTECTED_OPTION = "-protected";
 	public static final String SOURCEPATH_OPTION = "-sourcepath";
 	public static final String CLASSPATH_OPTION = "-classpath";
