@@ -19,7 +19,7 @@ public class SearchField {
 		String aux = null;
 		for (int i = 0; i < lines.size(); i++) {
 			aux = lines.get(i);
-			if (aux.contains("<div id=\"toctitle\">Table of Contents</div>")) {
+			if (aux.contains("<div id=\"toctitle\">Conteúdo</div>")) {
 				lines.add(i+1, inputField);
 			} else if (aux.contains("<title>")) {
 				lines.add(i+1, jqueryCDN);

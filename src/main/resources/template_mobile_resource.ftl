@@ -1,4 +1,4 @@
-[endpoint_general]
+[endpoint_mobile]
 === *${resourceName}*
 ${resourceDescription}
 

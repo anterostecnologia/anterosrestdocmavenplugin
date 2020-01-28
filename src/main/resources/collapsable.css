@@ -1,0 +1,15 @@
+.plusimageapply{
+    list-style-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAh0lEQVQ4T7XTsQkCQRAF0He1ybUhiAYHFmBkaGQFBpca2IAgYjNiEYqibKCB4t0yy026/Mdnd7ZSOFVh3mDABTPs+xr+a/DEA3NsupAu4J1bY4GE/kwOkEI7jHH9FnKBlDthVAIcUUeBLSa4RYAVlpFLvKNBG3nGM6Y4RBepL/c5H+wvZDd4AeooGhGCcrDIAAAAAElFTkSuQmCC);
+    list-style-position: inside;
+    cursor:pointer;
+}
+.minusimageapply{
+    list-style-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAg0lEQVQ4T93SOw7CQAyE4S811LScgDvwODdwCnoEHRUNPRpEpAARjpQu7ry2/52ddWNkNCPnTRSwwh3XL3+WmOPUPe/z4IA0b3B5Nyc/4oxtBVhgjxnWvIzO8AM73CpA6l1I8t7hFP59YwtJ38/NrYpqDwJJfMge8oTBC1opKEETADwBfzAREc8bA7cAAAAASUVORK5CYII=);
+    list-style-position: inside;
+    cursor:pointer;
+}
+.selectedimage{
+    list-style-position: inside;
+    list-style-image:none;
+    cursor:pointer;
+}

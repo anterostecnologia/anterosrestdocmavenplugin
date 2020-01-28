@@ -1,4 +1,4 @@
-==== Example request
+===== Requisição e resposta
 
 [source,bash]
 .Curl
@@ -8,7 +8,7 @@ $ ${curl}
 
 
 [source,http]
-.Request Url
+.Requisição Url
 ----
 ${http_url}
 ----

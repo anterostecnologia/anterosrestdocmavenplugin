@@ -19,11 +19,22 @@ import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ANTEROS_J
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ANTEROS_JSONC_JAVADOC;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.CLASSPATH_OPTION;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.DOCLET_OPTION;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.GENERAL;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.INTEGRATION;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_ADOC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_DATA_INTEGRATION_ADOC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_MOBILE_ADOC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_PERSISTENCE_ADOC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_PERSISTENCE_SECURITY_ADOC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_SECURITY_ADOC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.MOBILE;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.PROTECTED_OPTION;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SECURITY;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SOURCEPATH_OPTION;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SPRING_WEB_CONTROLLER;
 import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TARGET;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_INTEGRATION_PERSISTENCE_TOPIC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_MOBILE_PERSISTENCE_TOPIC;
 import static br.com.anteros.restdoc.maven.plugin.util.JavadocUtil.isNotEmpty;
 
 import java.io.File;
@@ -33,9 +44,24 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -64,17 +90,35 @@ import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.util.FileUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.qdox.JavaProjectBuilder;
+import com.thoughtworks.qdox.library.ClassLibraryBuilder;
+import com.thoughtworks.qdox.library.SortedClassLibraryBuilder;
+import com.thoughtworks.qdox.model.JavaClass;
 
+import br.com.anteros.core.scanner.ClassFilter;
+import br.com.anteros.core.scanner.ClassPathScanner;
+import br.com.anteros.core.utils.ReflectionUtils;
 import br.com.anteros.core.utils.ResourceUtils;
+import br.com.anteros.core.utils.StringUtils;
+import br.com.anteros.persistence.metadata.annotation.Entity;
+import br.com.anteros.remote.synch.annotation.RemoteSynchDataIntegration;
+import br.com.anteros.remote.synch.annotation.RemoteSynchMobile;
+import br.com.anteros.restdoc.maven.plugin.doclet.AnterosFreeMarkerTemplateLoader;
 import br.com.anteros.restdoc.maven.plugin.doclet.AnterosRestDoclet;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
 import br.com.anteros.restdoc.maven.plugin.util.ResourceResolver;
+import br.com.anteros.restdoc.maven.plugin.util.SearchField;
 import br.com.anteros.restdoc.maven.plugin.util.SourceResolverConfig;
+import freemarker.core.ParseException;
+import freemarker.template.Configuration;
+import freemarker.template.MalformedTemplateNameException;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateNotFoundException;
 
 /**
  * 
  * @author Edson Martins
- * @author Eduardo Albertini
  *
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
@@ -115,6 +159,12 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	 */
 	@Parameter(required = true)
 	private List<String> packageScanEndpoints = new ArrayList<String>();
+
+	/**
+	 * Nome dos pacotes para procurar as Entidades
+	 */
+	@Parameter(required = true)
+	private List<String> packageScanEntities = new ArrayList<String>();
 
 	/**
 	 * Base para gerar as URL de execução dos exemplos
@@ -200,11 +250,15 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	@Parameter(property = "reactorProjects", readonly = true)
 	private List<MavenProject> reactorProjects;
 
+	private Map<String, String> anchors = new HashMap<>();
+	private Map<String, String> anchorsMobile = new HashMap<>();
+	private Map<String, String> anchorsIntegration = new HashMap<>();
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 		/**
-		 * Se não informar o nome do documento .adoc principal copiamos o padrão
-		 * para a pasta sourceDirectory.
+		 * Se não informar o nome do documento .adoc principal copiamos o padrão para a
+		 * pasta sourceDirectory.
 		 */
 		if (sourceDocumentName == null) {
 			sourceDocumentName = "index.adoc";
@@ -224,6 +278,24 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 						"Não foi informado o nome do documento principal para gerar a documentação e não foi encontrado o padrão.",
 						e);
 			}
+		}
+		try {
+			InputStream openStream = ResourceUtils.getResourceAsStream("images/arquitetura_oauth2.png");
+			if (!sourceDirectory.exists())
+				sourceDirectory.mkdirs();
+
+			File subdirImages = new File(sourceDirectory + File.separator + "images");
+			if (!subdirImages.exists())
+				subdirImages.mkdirs();
+
+			FileOutputStream fos = new FileOutputStream(
+					new File(subdirImages + File.separator + "arquitetura_oauth2.png"));
+			br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
+			fos.flush();
+			fos.close();
+			openStream.close();
+		} catch (IOException e) {
+			throw new MojoExecutionException("Não foi possível copiar imagens.", e);
 		}
 
 		List<String> dependencySourcePaths = null;
@@ -271,15 +343,15 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		parameters.add(getClassPath());
 
 		/**
-		 * Executa o javadoc para obter os comentários referente as classes que
-		 * serão geradas na documentação da API REST usando um Doclet
-		 * customizado (AnterosRestDoclet)
+		 * Executa o javadoc para obter os comentários referente as classes que serão
+		 * geradas na documentação da API REST usando um Doclet customizado
+		 * (AnterosRestDoclet)
 		 */
 		com.sun.tools.javadoc.Main.execute(parameters.toArray(new String[] {}));
 
 		/**
-		 * Lê o arquivo JSON contendo informações sobre os endpoints lidos com o
-		 * javadoc via AnterosRestDoclet(Doclet customizado).
+		 * Lê o arquivo JSON contendo informações sobre os endpoints lidos com o javadoc
+		 * via AnterosRestDoclet(Doclet customizado).
 		 */
 		File temporaryJsonPath = new File(temporaryDirectoryJson);
 		if (!temporaryJsonPath.exists())
@@ -294,7 +366,18 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			 * Le os dados do JSON gerado a partir do javadoc.
 			 */
 			ObjectMapper mapper = new ObjectMapper();
-			ClassDescriptor[] classDescriptors = mapper.readValue(fis, ClassDescriptor[].class);
+			List<ClassDescriptor> classDescriptors = Arrays.asList(mapper.readValue(fis, ClassDescriptor[].class));
+
+			/**
+			 * Ordena as classes pelo nome
+			 */
+			Collections.sort(classDescriptors, new Comparator<ClassDescriptor>() {
+
+				@Override
+				public int compare(ClassDescriptor o1, ClassDescriptor o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+			});
 
 			/**
 			 * Gera o arquivo de items da documentação.
@@ -306,12 +389,39 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 				filePath = sourceDocumentName.substring(0, sourceDocumentName.lastIndexOf(File.separator));
 			}
 
-			File itemsFile = new File(filePath, ITEMS_ADOC);
+			this.anchors.clear();
+			this.anchorsMobile.clear();
+			this.anchorsIntegration.clear();
 
-			Writer writer = new FileWriter(itemsFile);
-			SnippetGenerator.generate(urlBase, writer, classDescriptors);
-			writer.flush();
-			writer.close();
+			URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+					Thread.currentThread().getContextClassLoader());
+			Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+			for (ClassDescriptor cld : classDescriptors) {
+				try {
+					Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(cld.getClazzName());
+					Class<?> parameterizedClass = ReflectionUtils.getParameterizedClass(clazz);
+					if (parameterizedClass != null) {
+						if (!anchors.containsKey(parameterizedClass.getCanonicalName())) {
+							anchors.put(parameterizedClass.getCanonicalName(), UUID.randomUUID().toString());
+						}
+						if (!anchorsMobile.containsKey(parameterizedClass.getCanonicalName())) {
+							anchorsMobile.put(parameterizedClass.getCanonicalName(), UUID.randomUUID().toString());
+						}
+						if (!anchorsIntegration.containsKey(parameterizedClass.getCanonicalName())) {
+							anchorsIntegration.put(parameterizedClass.getCanonicalName(), UUID.randomUUID().toString());
+						}
+					}
+				} catch (Exception e) {
+				}
+			}
+
+			this.buildItemsPersistenceAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
+			this.buildItemsSecurityAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
+			this.buildItemsResourceAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
+			this.buildItemsResourceSecurityAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
+			this.buildMobileAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
+			this.buildDataIntegrationAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
 
 			fis.close();
 
@@ -330,23 +440,327 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 					fos.close();
 					openStream.close();
 				} catch (IOException e) {
-					throw new MojoExecutionException(
-							"Não foi possível copiar o template padrão de CSS.", e);
+					throw new MojoExecutionException("Não foi possível copiar o template padrão de CSS.", e);
 				}
 
 				this.attributes.put("stylesheet", stylesheetFile.getAbsolutePath());
 			}
 
 			/**
-			 * Executa geração dos arquivos da documentação a partir dos
-			 * arquivos .adoc (asciidoc)
+			 * Executa geração dos arquivos da documentação a partir dos arquivos .adoc
+			 * (asciidoc)
 			 */
 			super.execute();
+
+			Path path = Paths.get(super.outputDirectory + "/index.html");
+			try {
+				SearchField.create(path);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new MojoExecutionException("Não foi possível gerar a documentação da API Rest.", e);
 		}
+	}
+
+	private void buildDataIntegrationAdoc(ClassDescriptor[] classDescriptors, String filePath)
+			throws MojoExecutionException, IOException, InstantiationException, IllegalAccessException,
+			NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException,
+			TemplateException {
+		List<JavaClass> integrationClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				RemoteSynchDataIntegration.class);
+
+		if (integrationClasses.size()==0) {
+			return;
+		}
+		
+		/**
+		 * Ordena as classes pelo nome
+		 */
+		Collections.sort(integrationClasses, new Comparator<JavaClass>() {
+
+			@Override
+			public int compare(JavaClass o1, JavaClass o2) {
+
+				try {
+					Class<?> clazz1 = Thread.currentThread().getContextClassLoader().loadClass(o1.getCanonicalName());
+					RemoteSynchDataIntegration remoteSynch1 = clazz1.getAnnotation(RemoteSynchDataIntegration.class);
+
+					Class<?> clazz2 = Thread.currentThread().getContextClassLoader().loadClass(o2.getCanonicalName());
+					RemoteSynchDataIntegration remoteSynch2 = clazz2.getAnnotation(RemoteSynchDataIntegration.class);
+
+					return (remoteSynch1.name().compareTo(remoteSynch2.name()));
+				} catch (ClassNotFoundException e) {
+				}
+				return 0;
+			}
+		});
+
+		List<JavaClass> allClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				Entity.class);
+		
+		for (JavaClass jc : allClasses) {
+			if (!anchorsIntegration.containsKey(jc.getCanonicalName())) {
+				anchorsIntegration.put(jc.getCanonicalName(), UUID.randomUUID().toString());
+			}
+		}
+
+		File itemsFile = new File(filePath, ITEMS_DATA_INTEGRATION_ADOC);
+
+		Writer writer = new FileWriter(itemsFile);
+		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+		Configuration configuration = new Configuration();
+		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
+		Template template = configuration.getTemplate(TEMPLATE_INTEGRATION_PERSISTENCE_TOPIC);
+		template.process(new HashMap<>(), writer);
+		writer.flush();
+
+		for (JavaClass cld : allClasses) {
+			try {
+				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(cld.getCanonicalName());
+				RemoteSynchDataIntegration remoteSynchIntegration = clazz
+						.getAnnotation(RemoteSynchDataIntegration.class);
+				if (remoteSynchIntegration != null) {
+					String anchor = UUID.randomUUID().toString();
+					if (!anchorsIntegration.containsKey("_" + remoteSynchIntegration.name()))
+						anchorsIntegration.put("_" + remoteSynchIntegration.name(), anchor);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		SnippetGenerator.generateDataIntegrationPersistence(urlBase, writer, integrationClasses, allClasses, anchorsIntegration);
+
+		SnippetGenerator.generateResources(urlBase, writer, INTEGRATION, anchorsIntegration, classDescriptors);
+		writer.flush();
+		writer.close();
+	}
+
+	private void buildMobileAdoc(ClassDescriptor[] classDescriptors, String filePath) throws MojoExecutionException,
+			IOException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
+			IllegalArgumentException, InvocationTargetException, TemplateException {
+		List<JavaClass> mobileClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				RemoteSynchMobile.class);
+		if (mobileClasses.size()==0) {
+			return;
+		}
+
+		/**
+		 * Ordena as classes pelo nome
+		 */
+		Collections.sort(mobileClasses, new Comparator<JavaClass>() {
+
+			@Override
+			public int compare(JavaClass o1, JavaClass o2) {
+
+				try {
+					Class<?> clazz1 = Thread.currentThread().getContextClassLoader().loadClass(o1.getCanonicalName());
+					RemoteSynchMobile remoteSynchMobile1 = clazz1.getAnnotation(RemoteSynchMobile.class);
+
+					Class<?> clazz2 = Thread.currentThread().getContextClassLoader().loadClass(o2.getCanonicalName());
+					RemoteSynchMobile remoteSynchMobile2 = clazz2.getAnnotation(RemoteSynchMobile.class);
+
+					return (remoteSynchMobile1.name().compareTo(remoteSynchMobile2.name()));
+				} catch (ClassNotFoundException e) {
+				}
+				return 0;
+			}
+		});
+
+		List<JavaClass> allClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				Entity.class);
+		
+		for (JavaClass jc : allClasses) {
+			if (!anchorsMobile.containsKey(jc.getCanonicalName())) {
+				anchorsMobile.put(jc.getCanonicalName(), UUID.randomUUID().toString());
+			}
+		}
+
+		File itemsFile = new File(filePath, ITEMS_MOBILE_ADOC);
+
+		Writer writer = new FileWriter(itemsFile);
+		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+		Configuration configuration = new Configuration();
+		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
+		Template template = configuration.getTemplate(TEMPLATE_MOBILE_PERSISTENCE_TOPIC);
+		template.process(new HashMap<>(), writer);
+		writer.flush();
+
+		for (JavaClass cld : mobileClasses) {
+			try {
+				RemoteSynchMobile remoteSynchMobile;
+				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(cld.getCanonicalName());
+				remoteSynchMobile = clazz.getAnnotation(RemoteSynchMobile.class);
+				String anchor = UUID.randomUUID().toString();
+				if (!anchorsMobile.containsKey(remoteSynchMobile.name()))
+					anchorsMobile.put(remoteSynchMobile.name(), anchor);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		SnippetGenerator.generateMobilePersistence(urlBase, writer, mobileClasses, allClasses, anchorsMobile);
+
+		SnippetGenerator.generateResources(urlBase, writer, MOBILE, anchorsMobile, classDescriptors);
+		writer.flush();
+		writer.close();
+	}
+
+	public String getPackageScanEntity() {
+		StringBuilder result = new StringBuilder();
+		StringBuilder sb = new StringBuilder();
+
+		if (packageScanEntities.size() > 0) {
+			for (int i = 0; i < packageScanEntities.size(); i++) {
+				boolean boAppendDelimiter = (i == packageScanEntities.size() - 1) ? false : true;
+
+				sb.append(packageScanEntities.get(i));
+
+				if (boAppendDelimiter)
+					sb.append(";");
+			}
+			result.append(sb);
+		}
+		return result.toString();
+	}
+
+	protected void buildItemsResourceAdoc(ClassDescriptor[] classDescriptors, String filePath)
+			throws IOException, TemplateNotFoundException, MalformedTemplateNameException, ParseException,
+			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
+			IllegalArgumentException, InvocationTargetException {
+		File itemsFile = new File(filePath, ITEMS_ADOC);
+
+		Writer writer = new FileWriter(itemsFile);
+		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+		SnippetGenerator.generateResources(urlBase, writer, GENERAL, anchors, classDescriptors);
+		writer.flush();
+		writer.close();
+	}
+
+	protected void buildItemsResourceSecurityAdoc(ClassDescriptor[] classDescriptors, String filePath)
+			throws IOException, TemplateNotFoundException, MalformedTemplateNameException, ParseException,
+			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
+			IllegalArgumentException, InvocationTargetException {
+		File itemsFile = new File(filePath, ITEMS_SECURITY_ADOC);
+
+		Writer writer = new FileWriter(itemsFile);
+		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+		SnippetGenerator.generateResources(urlBase, writer, SECURITY, anchors, classDescriptors);
+		writer.flush();
+		writer.close();
+	}
+
+	protected void buildItemsPersistenceAdoc(ClassDescriptor[] classDescriptors, String filePath)
+			throws IOException, TemplateNotFoundException, MalformedTemplateNameException, ParseException,
+			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
+			IllegalArgumentException, InvocationTargetException {
+		List<JavaClass> persistenceClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				Entity.class);
+
+		List<JavaClass> allClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				Entity.class);
+		
+		for (JavaClass jc : allClasses) {
+			if (!anchors.containsKey(jc.getCanonicalName())) {
+				anchors.put(jc.getCanonicalName(), UUID.randomUUID().toString());
+			}
+		}
+
+		File itemsFile = new File(filePath, ITEMS_PERSISTENCE_ADOC);
+
+		Writer writer = new FileWriter(itemsFile);
+		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+		SnippetGenerator.generatePersistence(urlBase, writer, false, anchors, persistenceClasses, allClasses);
+		writer.flush();
+		writer.close();
+	}
+
+	protected void buildItemsSecurityAdoc(ClassDescriptor[] classDescriptors, String filePath)
+			throws IOException, TemplateNotFoundException, MalformedTemplateNameException, ParseException,
+			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
+			IllegalArgumentException, InvocationTargetException {
+		List<JavaClass> persistenceClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				Entity.class);
+
+		List<JavaClass> allClasses = getAllClasses(true, this.getPackageScanEntity(), this.createClassPath(),
+				Entity.class);
+		
+		for (JavaClass jc : allClasses) {
+			if (!anchors.containsKey(jc.getCanonicalName())) {
+				anchors.put(jc.getCanonicalName(), UUID.randomUUID().toString());
+			}
+		}
+		
+		File itemsFile = new File(filePath, ITEMS_PERSISTENCE_SECURITY_ADOC);
+
+		Writer writer = new FileWriter(itemsFile);
+		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+		SnippetGenerator.generatePersistence(urlBase, writer, true, anchors, persistenceClasses, allClasses);
+		writer.flush();
+		writer.close();
+	}
+
+	private List<JavaClass> getAllClasses(boolean generateForAbstractClass, String sourcesToScanEntities,
+			List<URL> urls, Class<? extends Annotation> remoteClazz) throws IOException {
+		List<JavaClass> result = new ArrayList<JavaClass>();
+		URLClassLoader urlClassLoader = new URLClassLoader(urls.toArray(new URL[] {}),
+				Thread.currentThread().getContextClassLoader());
+
+		Thread.currentThread().setContextClassLoader(urlClassLoader);
+		ClassLibraryBuilder libraryBuilder = new SortedClassLibraryBuilder();
+		libraryBuilder.appendClassLoader(urlClassLoader);
+		JavaProjectBuilder docBuilder = new JavaProjectBuilder(libraryBuilder);
+
+		String[] packages = StringUtils.tokenizeToStringArray(sourcesToScanEntities, ", ;");
+		List<Class<?>> scanClasses = ClassPathScanner
+				.scanClasses(new ClassFilter().packages(packages).annotation(remoteClazz));
+		/**
+		 * Ordena as classes pelo nome
+		 */
+
+		/**
+		 * Ordena as classes pelo nome
+		 */
+		Collections.sort(scanClasses, new Comparator<Class<?>>() {
+
+			@Override
+			public int compare(Class<?> o1, Class<?> o2) {
+				return o1.getSimpleName().compareTo(o2.getSimpleName());
+			}
+		});
+		for (Class<?> cl : scanClasses) {
+			if (Modifier.isAbstract(cl.getModifiers()) && !generateForAbstractClass) {
+				continue;
+			}
+
+			JavaClass javaClass = docBuilder.getClassByName(cl.getName());
+			if (javaClass != null)
+				result.add(javaClass);
+		}
+
+		return result;
 	}
 
 	protected StringBuilder getSourcesPath() {
@@ -377,13 +791,26 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		return classPath.toString();
 	}
 
+	protected List<URL> createClassPath() {
+		List<URL> list = new ArrayList<URL>();
+		if (classpathElements != null) {
+			for (String cpel : classpathElements) {
+				try {
+					list.add(new File(cpel).toURI().toURL());
+				} catch (MalformedURLException mue) {
+				}
+			}
+		}
+		return list;
+	}
+
 	public List<String> getPackageScanEndpoints() {
 		return packageScanEndpoints;
 	}
 
 	/**
-	 * Resolve dependency sources so they can be included directly in the
-	 * javadoc process. To customize this, override
+	 * Resolve dependency sources so they can be included directly in the javadoc
+	 * process. To customize this, override
 	 * {@link AbstractJavadocMojo#configureDependencySourceResolution(SourceResolverConfig)}.
 	 */
 	protected final List<String> getDependencySourcePaths() throws MavenReportException {
@@ -444,9 +871,8 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	}
 
 	/**
-	 * Override this method to customize the configuration for resolving
-	 * dependency sources. The default behavior enables the resolution of
-	 * -sources jar files.
+	 * Override this method to customize the configuration for resolving dependency
+	 * sources. The default behavior enables the resolution of -sources jar files.
 	 */
 	protected SourceResolverConfig configureDependencySourceResolution(final SourceResolverConfig config) {
 		return config.withCompileSources();
@@ -467,6 +893,56 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		}
 
 		return new IncludesArtifactFilter(artifactPatterns);
+	}
+
+	public static class DependencyComparator implements Comparator<Class<?>> {
+
+		public int compare(Class<?> c1, Class<?> c2) {
+
+			if (c1 == null) {
+				if (c2 == null) {
+					return 0;
+				} else {
+					// Sort nullos primeiro
+					return 1;
+				}
+			} else if (c2 == null) {
+				// Sort nulos primeiro
+				return -1;
+			}
+
+			// Neste ponto, sabemos que c1 e c2 não são nulos
+			if (c1.equals(c2)) {
+				return 0;
+			}
+
+			Field[] fields = ReflectionUtils.getAllDeclaredFields(c1);
+			for (Field field : fields) {
+				if (field.getType().equals(c2) || ReflectionUtils.isExtendsClass(c2, field.getType())) {
+					return 1;
+				}
+			}
+
+			fields = ReflectionUtils.getAllDeclaredFields(c2);
+			for (Field field : fields) {
+				if (field.getType().equals(c1) || ReflectionUtils.isExtendsClass(c1, field.getType())) {
+					return -1;
+				}
+			}
+
+			// Neste ponto, c1 e c2 não são nulos e não iguais, vamos
+			// compará-los para ver qual é "superior" na hierarquia de classes
+			boolean c1Lower = c2.isAssignableFrom(c1);
+			boolean c2Lower = c1.isAssignableFrom(c2);
+
+			if (c1Lower && !c2Lower) {
+				return 1;
+			} else if (c2Lower && !c1Lower) {
+				return -1;
+			}
+
+			return c1.getName().compareTo(c2.getName());
+		}
 	}
 
 }

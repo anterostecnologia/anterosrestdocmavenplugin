@@ -24,6 +24,7 @@ import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.NAME_TAG;
 import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.firstSentence;
 import static java.util.Collections.emptyList;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -33,6 +34,7 @@ import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.ProgramElementDoc;
 import com.sun.javadoc.RootDoc;
 
+import br.com.anteros.core.utils.ReflectionUtils;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.Endpoint;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.PathVar;
@@ -73,6 +75,15 @@ public abstract class AbstractCollector implements Collector {
 		// it to the set of descriptors.
 		for (ClassDoc classDoc : rootDoc.classes()) {
 			ClassDescriptor descriptor = getClassDescriptor(classDoc);
+			Field field = ReflectionUtils.getFieldByName(classDoc.getClass(), "type");
+			field.setAccessible(true);
+			Object value;
+			try {
+				value = field.get(classDoc);
+				descriptor.setClazzName(value.toString());
+			} catch (Exception e) {
+			}			
+			
 			if (descriptor != null && !isEmpty(descriptor.getEndpoints()))
 				classDescriptors.add(descriptor);
 		}

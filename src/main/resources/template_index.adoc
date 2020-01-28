@@ -3,113 +3,537 @@
 :compat-mode:
 :page-layout!:
 :toc: left
-:toclevels: 2
+:toclevels: 3
 :sectanchors:
 :sectlinks:
 :sectnums:
 :linkattrs:
+:toc-collapsable:
+:toc-title: Conteúdo
+:http-get: pass:quotes[[.http.get]#GET#]
+:http-post: pass:quotes[[.http.post]#POST#]
+:http-put: pass:quotes[[.http.put]#PUT#]
+:http-delete: pass:quotes[[.http.delete]#DELETE#]
+:http-options: pass:quotes[[.http.options]#OPTIONS#]
+:http-head: pass:quotes[[.http.head]#HEAD#]
+:http-patch: pass:quotes[[.http.patch]#PATCH#]
+:anteros-tenant-id: pass:quotes[[.anteros.tenantid]#TENANT ID#]
+:anteros-type: pass:quotes[[.anteros.type]#TYPE#]
+:anteros-company-id: pass:quotes[[.anteros.companyid]#COMPANY ID#]
+:anteros-version: pass:quotes[[.anteros.version]#VERSION#]
+:anteros-code: pass:quotes[[.anteros.code]#CODE#]
+:anteros-id: pass:quotes[[.anteros.id]#ID#]
+:data-uri:
+
 
 [[overview]]
-= Overview
+= *Visão Geral*
 
 [[overview-general]]
-== General
+== *Geral*
 
 [[overview-http-verbs]]
-=== HTTP verbs
+=== HTTP verbos
 
-An example of static AsciiDoc.
 
 [cols="20%,80%"]
 |===
-| Verb | Usage
+| Verbo | Uso
 
-| `GET`
-| Used to retrieve a resource (idempotent)
+| {http-get}
+| Usado para recuperar uma identidade (idempotente)
 
-| `POST`
-| Used to create a new resource
+| {http-post}
+| Usado para criar uma nova entidade
 
-| `PUT`
-| Used to update an existing resource (idempotent)
+| {http-put}
+| Usado para atualizar uma entidade existente (idempotente)
 
-| `DELETE`
-| Used to delete an existing resource
+| {http-delete}
+| Usado para remover uma entidade existente
 |===
 
-[[overview-pagination]]
-=== Pagination
 
-Spring pagination facilities offer following:
+
+[[token]]
+=== Obtenção de token OAUTH2 para autenticação
+
+image::arquitetura_oauth2.png[title="Arquitetura OAuth2"]
+
+[source,javascript,indent=0,role="primary"]
+.JS
+----
+var settings = {
+  "async": true,
+  "crossDomain": true,
+  "url": "https://SERVER:8090/Anteros-OAuth2-Server/oauth/token",
+  "method": "POST",
+  "headers": {
+    "content-type": "application/x-www-form-urlencoded",
+    "authorization": "Basic bmV4dXMtYWZ2OnNlbmhhX3NlY3JldGE=",
+    "cache-control": "no-cache",
+  },
+  "data": {
+    "username": "USUARIO_AQUI",
+    "grant_type": "password",
+    "password": "SENHA_AQUI"
+  }
+}
+
+$.ajax(settings).done(function (response) {
+  console.log(response);
+});
+----
+
+[source,java,indent=0,role="primary"]
+.Java
+----
+OkHttpClient client = new OkHttpClient();
+
+MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+RequestBody body = RequestBody.create(mediaType, "username=USUARIO_AQUI&grant_type=password&password=SENHA_AQUI");
+Request request = new Request.Builder()
+  .url("https://SERVER:8090/Anteros-OAuth2-Server/oauth/token")
+  .post(body)
+  .addHeader("content-type", "application/x-www-form-urlencoded")
+  .addHeader("authorization", "Basic bmV4dXMtYWZ2OnNlbmhhX3NlY3JldGE=")
+  .addHeader("cache-control", "no-cache")
+  .build();
+
+Response response = client.newCall(request).execute();
+----
+
+[source,php,indent=0,role="primary"]
+.PHP
+----
+$request = new HttpRequest();
+$request->setUrl('https://SERVER:8090/Anteros-OAuth2-Server/oauth/token');
+$request->setMethod(HTTP_METH_POST);
+
+$request->setHeaders(array(
+  'cache-control' => 'no-cache',
+  'authorization' => 'Basic bmV4dXMtYWZ2OnNlbmhhX3NlY3JldGE=',
+  'content-type' => 'application/x-www-form-urlencoded'
+));
+
+$request->setContentType('application/x-www-form-urlencoded');
+$request->setPostFields(array(
+  'username' => 'USUARIO_AQUI',
+  'grant_type' => 'password',
+  'password' => 'SENHA_AQUI'
+));
+
+try {
+  $response = $request->send();
+
+  echo $response->getBody();
+} catch (HttpException $ex) {
+  echo $ex;
+}
+----
+
+[source,csharp,indent=0,role="primary"]
+.C#
+----
+var client = new RestClient("https://SERVER:8090/Anteros-OAuth2-Server/oauth/token");
+var request = new RestRequest(Method.POST);
+request.AddHeader("cache-control", "no-cache");
+request.AddHeader("authorization", "Basic bmV4dXMtYWZ2OnNlbmhhX3NlY3JldGE=");
+request.AddHeader("content-type", "application/x-www-form-urlencoded");
+request.AddParameter("application/x-www-form-urlencoded", "username=USUARIO_AQUI&grant_type=password&password=SENHA_AQUI", ParameterType.RequestBody);
+IRestResponse response = client.Execute(request);
+----
+
+
+[source,json,indent=0,role="primary"]
+.Retorno da chamada
+----
+{
+    "access_token": "0e9866e9-1c91-40f9-806b-078898ba45cc",
+    "token_type": "bearer",
+    "refresh_token": "e446a7bc-77b4-4647-8d63-63cce0442d9d",
+    "expires_in": 33509,
+    "scope": "read write"
+}
+----
+
+[[chamada_rest]]
+=== Consumindo a API REST
+
+[source,javascript,indent=0,role="secondary"]
+.JS
+----
+var settings = {
+  "async": true,
+  "crossDomain": true,
+  "url": "http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll?page=0&size=5&sort=&fieldsToForceLazy=",
+  "method": "GET",
+  "headers": {
+    "username": "USUARIO_AQUI",
+    "password": "SENHA_AQUI",
+    "grant_type": "password",
+    "x-tenant-id": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+    "x-company-id": "1",
+    "authorization": "Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc",
+    "cache-control": "no-cache",
+  },
+  "data": {
+    "username": "USUARIO_AQUI",
+    "grant_type": "password",
+    "password": "SENHA_AQUI"
+  }
+}
+
+$.ajax(settings).done(function (response) {
+  console.log(response);
+});
+----
+
+[source,java,indent=0,role="secondary"]
+.Java
+----
+OkHttpClient client = new OkHttpClient();
+
+MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+RequestBody body = RequestBody.create(mediaType, "username=admin&grant_type=password&password=admin1234");
+Request request = new Request.Builder()
+  .url("http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll?page=0&size=5&sort=&fieldsToForceLazy=")
+  .get()
+  .addHeader("username", "USUARIO_AQUI")
+  .addHeader("password", "SENHA_AQUI")
+  .addHeader("grant_type", "password")
+  .addHeader("x-tenant-id", "7fd3e7af-e8cd-4de7-9806-230c8d6022c2")
+  .addHeader("x-company-id", "1")
+  .addHeader("authorization", "Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc")
+  .addHeader("cache-control", "no-cache")
+  .build();
+
+Response response = client.newCall(request).execute();
+----
+
+[source,php,indent=0,role="secondary"]
+.PHP
+----
+$request = new HttpRequest();
+$request->setUrl('http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll');
+$request->setMethod(HTTP_METH_GET);
+
+$request->setQueryData(array(
+  'page' => '0',
+  'size' => '5',
+  'sort' => '',
+  'fieldsToForceLazy' => ''
+));
+
+$request->setHeaders(array(
+  'cache-control' => 'no-cache',
+  'authorization' => 'Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc',
+  'x-company-id' => '1',
+  'x-tenant-id' => '7fd3e7af-e8cd-4de7-9806-230c8d6022c2',
+  'grant_type' => 'password',
+  'password' => 'admin1234',
+  'username' => 'admin'
+));
+
+$request->setContentType('application/x-www-form-urlencoded');
+$request->setPostFields(array(
+  'username' => 'USUARIO_AQUI',
+  'grant_type' => 'password',
+  'password' => 'SENHA_AQUI'
+));
+
+try {
+  $response = $request->send();
+
+  echo $response->getBody();
+} catch (HttpException $ex) {
+  echo $ex;
+}
+----
+
+[source,csharp,indent=0,role="secondary"]
+.C#
+----
+var client = new RestClient("http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll?page=0&size=5&sort=&fieldsToForceLazy=");
+var request = new RestRequest(Method.GET);
+request.AddHeader("cache-control", "no-cache");
+request.AddHeader("authorization", "Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc");
+request.AddHeader("x-company-id", "1");
+request.AddHeader("x-tenant-id", "7fd3e7af-e8cd-4de7-9806-230c8d6022c2");
+request.AddHeader("grant_type", "password");
+request.AddHeader("password", "SENHA_AQUI");
+request.AddHeader("username", "USUARIO_AQUI");
+request.AddParameter("undefined", "username=SENHA_AQUI&grant_type=password&password=USUARIO_AQUI", ParameterType.RequestBody);
+IRestResponse response = client.Execute(request);
+----
+
+[source,json,indent=0,role="secondary"]
+.Retorno da chamada
+----
+{
+    "content": [
+        {
+            "type": "JURIDICA",
+            "@id": "4c47f0fb-49bf-453e-8572-4d7476ee77f0",
+            "id": 3847,
+            "dhVersao": "2019-12-17T00:00:00.000",
+            "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+            "nome": "CONTAGRO LTDA",
+            "dataCadastro": "2019-12-17T00:00:00.000",
+            "observacoes": null,
+            "enderecos": null,
+            "papeis": null,
+            "contratos": null,
+            "empresa": {
+                "@id": "9f62a8e3-7467-427b-b9f4-c708601f8cab",
+                "id": 1,
+                "dhVersao": "2019-12-17T14:39:28.000",
+                "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+                "razaoSocial": "TIGRARA",
+                "nome": "TIGRARA",
+                "cidade": {
+                    "@id": "0b9fc573-a2d4-476d-875a-8a661a7355cb",
+                    "id": 2860,
+                    "dhVersao": "2019-12-17T14:39:28.000",
+                    "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+                    "idCidadeIBGE": 4105508,
+                    "nomeCidade": "Cianorte",
+                    "estado": {
+                        "@id": "7ea8fa1d-b522-4d36-821a-899b645c57d2",
+                        "id": 18,
+                        "dhVersao": "2019-12-17T14:39:28.000",
+                        "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+                        "nomeEstado": "Paraná",
+                        "siglaEstado": "PR",
+                        "pais": {
+                            "@id": "d6a3ae04-fa82-44eb-a52c-ebaf1bc5216f",
+                            "idPais": 1,
+                            "dhVersao": "2019-12-17T14:39:28.000",
+                            "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+                            "nomePais": "Brasil",
+                            "estados": null
+                        },
+                        "cidades": null
+                    }
+                },
+                "urlSite": "https://tigrara.com.br/site/"
+            },
+            "situacaoFiscal": "HABILITADO",
+            "microEmpreendedor": false,
+            "tpStatus": "ATIVO",
+            "dhUltimaAlteracao": "2019-12-22T00:00:00.000",
+            "razaoSocial": "CONTAGRO COMERCIO DE PRODUTOS AGROPECUARIOS LTDA",
+            "cnpj": "80033483000160"
+        },
+        {
+            "type": "JURIDICA",
+            "@id": "620cc9c3-b751-499f-ba38-7cf1946d4128",
+            "id": 3848,
+            "dhVersao": "2019-12-17T00:00:00.000",
+            "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+            "nome": "VIA FOLHA INDUSTRIA E COMERCIO DE FERTILIZANTES LTDA",
+            "dataCadastro": "2019-12-17T00:00:00.000",
+            "observacoes": null,
+            "enderecos": null,
+            "papeis": null,
+            "contratos": null,
+            "empresa": "9f62a8e3-7467-427b-b9f4-c708601f8cab",
+            "situacaoFiscal": "HABILITADO",
+            "microEmpreendedor": false,
+            "tpStatus": "ATIVO",
+            "dhUltimaAlteracao": "2019-12-22T00:00:00.000",
+            "razaoSocial": "VIA FOLHA INDUSTRIA E COMERCIO DE FERTILIZANTES LTDA",
+            "cnpj": "12238760000110"
+        },
+        {
+            "type": "JURIDICA",
+            "@id": "83248d65-f00c-4bf8-a829-2d9be9103ba6",
+            "id": 3850,
+            "dhVersao": "2019-12-17T00:00:00.000",
+            "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+            "nome": "CONSTRUTORA AMATA",
+            "dataCadastro": "2019-12-17T00:00:00.000",
+            "observacoes": null,
+            "enderecos": null,
+            "papeis": null,
+            "contratos": null,
+            "empresa": "9f62a8e3-7467-427b-b9f4-c708601f8cab",
+            "situacaoFiscal": "HABILITADO",
+            "microEmpreendedor": false,
+            "tpStatus": "ATIVO",
+            "dhUltimaAlteracao": "2019-12-22T00:00:00.000",
+            "razaoSocial": "ARTHUR M T T DA MATA CONSTRUTORA E EMPREENDIMENTOS",
+            "cnpj": "22734853000190"
+        },
+        {
+            "type": "JURIDICA",
+            "@id": "75c350b9-4f54-4508-bb9e-3157bfb27201",
+            "id": 3851,
+            "dhVersao": "2019-12-17T00:00:00.000",
+            "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+            "nome": "JLL - ESTRUTURAS METALICAS",
+            "dataCadastro": "2019-12-17T00:00:00.000",
+            "observacoes": null,
+            "enderecos": null,
+            "papeis": null,
+            "contratos": null,
+            "empresa": "9f62a8e3-7467-427b-b9f4-c708601f8cab",
+            "situacaoFiscal": "HABILITADO",
+            "microEmpreendedor": false,
+            "tpStatus": "ATIVO",
+            "razaoSocial": "JLL - MONTAGENS DE ESTRUTURAS METALICAS LTDA",
+            "cnpj": "18557024000101"
+        },
+        {
+            "type": "JURIDICA",
+            "@id": "f69088f6-b8f8-46e1-8477-36824b45b769",
+            "id": 3853,
+            "dhVersao": "2019-12-17T00:00:00.000",
+            "owner": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
+            "nome": "MEGAPERFIL INDUSTRIA E COMERCIO LTDA",
+            "dataCadastro": "2019-12-17T00:00:00.000",
+            "observacoes": null,
+            "enderecos": null,
+            "papeis": null,
+            "contratos": null,
+            "empresa": "9f62a8e3-7467-427b-b9f4-c708601f8cab",
+            "situacaoFiscal": "HABILITADO",
+            "microEmpreendedor": false,
+            "tpStatus": "ATIVO",
+            "dhUltimaAlteracao": "2019-12-22T00:00:00.000",
+            "razaoSocial": "MEGAPERFIL INDUSTRIA E COMERCIO LTDA",
+            "cnpj": "03237475000194"
+        }
+    ],
+    "totalPages": 4950,
+    "last": false,
+    "totalElements": 24748,
+    "numberOfElements": 5,
+    "first": true,
+    "size": 5,
+    "number": 0
+}
+----
+
+[[overview-pagination]]
+=== Paginação
+
 
 [cols="20%,15%,10%,55%"]
 |===
-| Path | Type | Optional | Description
+| Campo | Tipo | Opcional | Descrição
 
 | page
 | Integer
 | false
-| Page you want to retrieve. Starts at 0.
+| Página que você deseja recuperar. Começa em 0.
 
 | size
 | Integer
 | false
-| Size of the page you want to retrieve.
+| Tamanho da página que você deseja recuperar.
 
 | sort
 | String
 | false
-| Properties that should be sorted by in the format `property,property(,ASC\|DESC)`.
-Default sort direction is ascending. Use multiple sort parameters if you want to
-switch directions, e.g. `?sort=firstname&sort=lastname,asc`.
+| Ordenação dos campos.
 
 | content
 | Object Array
 | false
-| Actual items.
+| Itens
 
 | totalElements
 | Integer
 | false
-| Total count.
+| Quantidade total
 
 | totalPages
 | Integer
 | false
-| Total pages with current page size.
+| Total de páginas com tamanho de página atual.
 
 | last
 | Boolean
 | false
-| If this page is the last one.
-
-| numberOfElements
-| Integer
-| false
-| Actual size of content array (number of items).
+| Se esta página for a última.
 
 | first
 | Boolean
 | false
-| If this page is the first one.
+| Se esta página for a primeira.
 
 | sort
 | Object
 | true
-| Sort information object.
+| Classificar objeto de informações.
 
 | size
 | Integer
 | false
-| Requested size of the page.
+| Tamanho solicitado da página.
 
 | number
 | Integer
 | false
-| Page number.
+| Número da página.
 |===
 
-[[resources]]
-= Resources
+
+[[overview-fields]]
+=== Legenda de campos
+
+
+[cols="20%,80%"]
+|===
+| Tipo campo | Significado
+
+| {anteros-id}
+| Identificador da entidade. Número gerado pelo sistema.
+
+| {anteros-type}
+| Campo que informa o tipo de entidade concreta no caso de entidades abstratas.
+
+| {anteros-code}
+| Campo informado pelo usuário do sistema e único para cada empresa de um proprietário. Também utilizado como campo chave na integração de dados.
+
+| {anteros-tenant-id}
+| Campo que define o dono(proprietário) dos dados no sistema.
+
+| {anteros-company-id}
+| Campo que define a empresa dos dados no sistema.
+
+| {anteros-version}
+| Campo controlado pelo sistema que define a versão da entidade.
+|===
+
+[[persistence1]]
+== *Entidades de persistência*
+
+include::itemsPersistence.adoc[]
+
+[[persistence2]]
+== *Entidades de Segurança*
+
+include::itemsPersistenceSecurity.adoc[]
+
+[[resources1]]
+== *Recursos REST*
 
 include::items.adoc[]
+
+[[resources2]]
+== *Recursos Segurança REST*
+
+include::itemsSecurity.adoc[]
+
+[[mobile]]
+== *Sincronismo Mobile*
+
+include::itemsMobile.adoc[]
+
+[[dataIntegration]]
+== *Integração de dados*
+
+include::itemsDataIntegration.adoc[]
+

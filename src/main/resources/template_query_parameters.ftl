@@ -1,6 +1,6 @@
-==== Query parameters
+===== Parâmetros da consulta
 [options="header",cols="20%,15%,10%,55%"]
 |===
-|Parameter|Type|Optional|Description
+|Parâmetro|Tipo|Opcional?|Descrição
 ${queryParametersItem}
 |===

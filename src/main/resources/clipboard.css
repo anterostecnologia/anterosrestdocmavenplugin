@@ -1,0 +1,5 @@
+.asciidoctorcopypaste {
+    background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABVUlEQVQ4T+2TO0gDQRBAZ+YuwRTa+OkEwUrE0pyVriBYxCgKQexFLSJYm8rOTitjob1wiHAxFopkUwgeaay0sLMQtVQkQnI7sgcLcQuj2DrV/PbtzM4sgiW5XM55eKmfA+K9HWOA4UQCF68ugkcTQztJCOHWoWs3lEHejnli1kdkdlzcMJAYkJ7MTCPTkNYRmRTjPAIca1tBdFSTZ09a90R2nx23QKpZNJAY4E3MHEbIO/aNDtOWYmCgKK8hnsieAMAzMnQy4XtYCVZiwJjIHFzL8rIN0H5KJjcbH809AzE5uppQltbaAhQ4N4iqDxQvhNXyCACwaactYHR8rh+o0a0PELiFFLwuSSmbPwa0tqRLTsFb/h/wxzdg5KJijuKNZVqvVUur3+6BPQVEvlVMSvsZ1V2tcnr5K0DrGL/8xrTIbhOoHnuVW+0IaHCgt2PK9/24BSOfXnvqEcWHX5oAAAAASUVORK5CYII=) no-repeat top left;
+    border: none;
+}
+.asciidoctorcopypaste:focus {outline:0;}

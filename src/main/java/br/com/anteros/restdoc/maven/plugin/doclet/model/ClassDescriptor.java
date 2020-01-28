@@ -30,6 +30,7 @@ public class ClassDescriptor {
 	private String contextPath;
 	private Collection<Endpoint> endpoints;
 	private String description;
+	private String clazzName;
 
 	public ClassDescriptor() {
 	}
@@ -77,5 +78,14 @@ public class ClassDescriptor {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+
+	public String getClazzName() {
+		return clazzName;
+	}
+
+	public void setClazzName(String clazzName) {
+		this.clazzName = clazzName;
 	}
 }

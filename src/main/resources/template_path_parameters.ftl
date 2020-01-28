@@ -1,6 +1,6 @@
-==== Path parameters
+===== Parâmetros enviados no Path
 [options="header",cols="20%,15%,65%"]
 |===
-|Parameter|Type|Description
+|Parâmetro|Tipo|Descrição
 ${pathParametersItem}
 |===
