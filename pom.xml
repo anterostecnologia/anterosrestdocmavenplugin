@@ -17,6 +17,7 @@
 		<bintray.package>anteros-restdoc-maven-plugin</bintray.package>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<jackson.version>[2.9.10.1,)</jackson.version>
 	</properties>
 
 	<description>
@@ -97,7 +98,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.9.8</version>
+			<version>${jackson.version}</version>
 		</dependency>
 
 		<dependency>

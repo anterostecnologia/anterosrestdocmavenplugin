@@ -73,7 +73,6 @@ import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.USER;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -119,8 +118,9 @@ import br.com.anteros.persistence.metadata.annotation.type.DiscriminatorType;
 import br.com.anteros.persistence.metadata.annotation.type.FetchMode;
 import br.com.anteros.persistence.metadata.annotation.type.TemporalType;
 import br.com.anteros.remote.synch.annotation.RemoteSynchDataIntegration;
-import br.com.anteros.remote.synch.annotation.RemoteSynchIgnore;
+import br.com.anteros.remote.synch.annotation.RemoteSynchIntegrationIgnore;
 import br.com.anteros.remote.synch.annotation.RemoteSynchMobile;
+import br.com.anteros.remote.synch.annotation.RemoteSynchMobileIgnore;
 import br.com.anteros.restdoc.maven.plugin.doclet.AnterosFreeMarkerTemplateLoader;
 import br.com.anteros.restdoc.maven.plugin.doclet.AnterosRestDoclet;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
@@ -721,7 +721,7 @@ public class SnippetGenerator {
 
 				for (Field field : fields) {
 					if (field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(JsonIgnore.class)
-							|| field.isAnnotationPresent(RemoteSynchIgnore.class)) {
+							|| field.isAnnotationPresent(RemoteSynchIntegrationIgnore.class)) {
 						continue;
 					}
 
@@ -938,7 +938,7 @@ public class SnippetGenerator {
 
 				for (Field field : fields) {
 					if (field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(JsonIgnore.class)
-							|| field.isAnnotationPresent(RemoteSynchIgnore.class)) {
+							|| field.isAnnotationPresent(RemoteSynchMobileIgnore.class)) {
 						continue;
 					}
 					if (field.isAnnotationPresent(Id.class)) {
@@ -1000,7 +1000,7 @@ public class SnippetGenerator {
 
 				for (Field field : fields) {
 					if (field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(JsonIgnore.class)
-							|| field.isAnnotationPresent(RemoteSynchIgnore.class)) {
+							|| field.isAnnotationPresent(RemoteSynchMobileIgnore.class)) {
 						continue;
 					}
 
@@ -1018,11 +1018,6 @@ public class SnippetGenerator {
 						Column ann = field.getAnnotation(Column.class);
 						fieldDescription = ann.label();
 						if (ann.required()) {
-							fieldOptional = NAO;
-							required = "";
-						}
-						Required requiredAnn = field.getAnnotation(Required.class);
-						if (requiredAnn!=null) {
 							fieldOptional = NAO;
 							required = "";
 						}

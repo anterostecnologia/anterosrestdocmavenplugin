@@ -84,6 +84,7 @@ public class ReadResources {
             file.getParentFile().mkdirs();
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             fileOutputStream.write(readResourceAsBytes(resource));
+            fileOutputStream.close();
         }catch(IOException ioe){
 
         }

@@ -186,7 +186,11 @@ public final class ResourceResolver
             }
             finally
             {
-                close( stream );
+            	try {
+                stream.close();
+            	} catch (Exception e ){
+            		
+            	}
             }
         }
 
@@ -255,6 +259,7 @@ public final class ResourceResolver
                     {
                         reader = new FileInputStream( javadocOptions );
                         options = new JavadocOptionsXpp3Reader().read( reader );
+                        reader.close();
                     }
                     catch ( XmlPullParserException e )
                     {
@@ -265,7 +270,11 @@ public final class ResourceResolver
                     }
                     finally
                     {
-                        close( reader );
+                    	try {
+                            reader.close();
+                        	} catch (Exception ex ){
+                        		
+                        	}
                     }
                 }
                 

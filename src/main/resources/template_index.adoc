@@ -169,18 +169,18 @@ var settings = {
   "url": "http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll?page=0&size=5&sort=&fieldsToForceLazy=",
   "method": "GET",
   "headers": {
-    "username": "USUARIO_AQUI",
-    "password": "SENHA_AQUI",
+    "username": "<USUARIO_AQUI>",
+    "password": "<SENHA_AQUI>",
     "grant_type": "password",
-    "x-tenant-id": "7fd3e7af-e8cd-4de7-9806-230c8d6022c2",
-    "x-company-id": "1",
-    "authorization": "Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc",
+    "x-tenant-id": "<INSIRA AQUI O ID DO PROPRIETÁRIO DO SISTEMA>",
+    "x-company-id": "<INSIRA AQUI O ID DA EMPRESA>",
+    "authorization": "Bearer <INSIRA AQUI O TOKEN OBTIDO>",
     "cache-control": "no-cache",
   },
   "data": {
-    "username": "USUARIO_AQUI",
+    "username": "<USUARIO_AQUI>",
     "grant_type": "password",
-    "password": "SENHA_AQUI"
+    "password": "<SENHA_AQUI>"
   }
 }
 
@@ -199,12 +199,12 @@ RequestBody body = RequestBody.create(mediaType, "username=admin&grant_type=pass
 Request request = new Request.Builder()
   .url("http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll?page=0&size=5&sort=&fieldsToForceLazy=")
   .get()
-  .addHeader("username", "USUARIO_AQUI")
-  .addHeader("password", "SENHA_AQUI")
+  .addHeader("username", "<USUARIO_AQUI>")
+  .addHeader("password", "<SENHA_AQUI>")
   .addHeader("grant_type", "password")
-  .addHeader("x-tenant-id", "7fd3e7af-e8cd-4de7-9806-230c8d6022c2")
-  .addHeader("x-company-id", "1")
-  .addHeader("authorization", "Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc")
+  .addHeader("x-tenant-id", "<INSIRA AQUI O ID DO PROPRIETÁRIO DO SISTEMA>")
+  .addHeader("x-company-id", "<INSIRA AQUI O ID DA EMPRESA>")
+  .addHeader("authorization", "Bearer <INSIRA AQUI O TOKEN OBTIDO>")
   .addHeader("cache-control", "no-cache")
   .build();
 
@@ -227,19 +227,19 @@ $request->setQueryData(array(
 
 $request->setHeaders(array(
   'cache-control' => 'no-cache',
-  'authorization' => 'Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc',
-  'x-company-id' => '1',
-  'x-tenant-id' => '7fd3e7af-e8cd-4de7-9806-230c8d6022c2',
+  'authorization' => 'Bearer <INSIRA AQUI O TOKEN OBTIDO>',
+  'x-company-id' => '<INSIRA AQUI O ID DA EMPRESA>',
+  'x-tenant-id' => '<INSIRA AQUI O ID DO PROPRIETÁRIO DO SISTEMA>',
   'grant_type' => 'password',
-  'password' => 'admin1234',
-  'username' => 'admin'
+  'password' => '<USUARIO_AQUI>',
+  'username' => '<SENHA_AQUI>'
 ));
 
 $request->setContentType('application/x-www-form-urlencoded');
 $request->setPostFields(array(
-  'username' => 'USUARIO_AQUI',
+  'username' => '<USUARIO_AQUI>',
   'grant_type' => 'password',
-  'password' => 'SENHA_AQUI'
+  'password' => '<SENHA_AQUI>'
 ));
 
 try {
@@ -257,12 +257,12 @@ try {
 var client = new RestClient("http://SERVER:8090/Nexus-AFV-Server/v1/abstractPessoa/findAll?page=0&size=5&sort=&fieldsToForceLazy=");
 var request = new RestRequest(Method.GET);
 request.AddHeader("cache-control", "no-cache");
-request.AddHeader("authorization", "Bearer 0e9866e9-1c91-40f9-806b-078898ba45cc");
-request.AddHeader("x-company-id", "1");
-request.AddHeader("x-tenant-id", "7fd3e7af-e8cd-4de7-9806-230c8d6022c2");
+request.AddHeader("authorization", "Bearer <INSIRA AQUI O TOKEN OBTIDO>");
+request.AddHeader("x-company-id", "<INSIRA AQUI O ID DA EMPRESA>");
+request.AddHeader("x-tenant-id", "<INSIRA AQUI O ID DO PROPRIETÁRIO DO SISTEMA>");
 request.AddHeader("grant_type", "password");
-request.AddHeader("password", "SENHA_AQUI");
-request.AddHeader("username", "USUARIO_AQUI");
+request.AddHeader("password", "<SENHA_AQUI>");
+request.AddHeader("username", "<USUARIO_AQUI>");
 request.AddParameter("undefined", "username=SENHA_AQUI&grant_type=password&password=USUARIO_AQUI", ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);
 ----

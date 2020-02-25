@@ -358,7 +358,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			temporaryJsonPath.mkdirs();
 
 		File file = new File(temporaryJsonPath + File.separator + ANTEROS_JSON);
-		FileInputStream fis;
+		FileInputStream fis=null;
 		try {
 
 			fis = new FileInputStream(file);
@@ -367,6 +367,8 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			 */
 			ObjectMapper mapper = new ObjectMapper();
 			List<ClassDescriptor> classDescriptors = Arrays.asList(mapper.readValue(fis, ClassDescriptor[].class));
+			
+			fis.close();
 
 			/**
 			 * Ordena as classes pelo nome
@@ -423,7 +425,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			this.buildMobileAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
 			this.buildDataIntegrationAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
 
-			fis.close();
+			
 
 			/**
 			 * Altera o CSS default do plugin para o tema azul
@@ -461,6 +463,13 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			if (fis !=null)
+				try {
+					fis.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			throw new MojoExecutionException("Não foi possível gerar a documentação da API Rest.", e);
 		}
 	}
@@ -540,6 +549,8 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		SnippetGenerator.generateResources(urlBase, writer, INTEGRATION, anchorsIntegration, classDescriptors);
 		writer.flush();
 		writer.close();
+		
+		urlClassLoader.close();
 	}
 
 	private void buildMobileAdoc(ClassDescriptor[] classDescriptors, String filePath) throws MojoExecutionException,
@@ -614,6 +625,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		SnippetGenerator.generateResources(urlBase, writer, MOBILE, anchorsMobile, classDescriptors);
 		writer.flush();
 		writer.close();
+		urlClassLoader.close();
 	}
 
 	public String getPackageScanEntity() {
@@ -648,6 +660,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		SnippetGenerator.generateResources(urlBase, writer, GENERAL, anchors, classDescriptors);
 		writer.flush();
 		writer.close();
+		urlClassLoader.close();
 	}
 
 	protected void buildItemsResourceSecurityAdoc(ClassDescriptor[] classDescriptors, String filePath)
@@ -664,6 +677,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		SnippetGenerator.generateResources(urlBase, writer, SECURITY, anchors, classDescriptors);
 		writer.flush();
 		writer.close();
+		urlClassLoader.close();
 	}
 
 	protected void buildItemsPersistenceAdoc(ClassDescriptor[] classDescriptors, String filePath)
@@ -692,6 +706,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		SnippetGenerator.generatePersistence(urlBase, writer, false, anchors, persistenceClasses, allClasses);
 		writer.flush();
 		writer.close();
+		urlClassLoader.close();
 	}
 
 	protected void buildItemsSecurityAdoc(ClassDescriptor[] classDescriptors, String filePath)
@@ -720,6 +735,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		SnippetGenerator.generatePersistence(urlBase, writer, true, anchors, persistenceClasses, allClasses);
 		writer.flush();
 		writer.close();
+		urlClassLoader.close();
 	}
 
 	private List<JavaClass> getAllClasses(boolean generateForAbstractClass, String sourcesToScanEntities,
@@ -759,6 +775,8 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			if (javaClass != null)
 				result.add(javaClass);
 		}
+		
+		urlClassLoader.close();
 
 		return result;
 	}

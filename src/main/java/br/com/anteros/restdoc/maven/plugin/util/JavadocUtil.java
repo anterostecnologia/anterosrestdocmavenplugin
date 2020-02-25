@@ -884,7 +884,7 @@ public class JavadocUtil
         throws IOException, ClassNotFoundException, NoClassDefFoundError
     {
         List classes = getClassNamesFromJar( jarFile );
-        ClassLoader cl;
+        URLClassLoader cl;
 
         // Needed to find com.sun.tools.doclets.Taglet class
         File tools = new File( System.getProperty( "java.home" ), "../lib/tools.jar" );
@@ -911,6 +911,8 @@ public class JavadocUtil
                 tagletClasses.add( c.getName() );
             }
         }
+        
+        cl.close();
 
         return tagletClasses;
     }
@@ -955,9 +957,8 @@ public class JavadocUtil
         }
         finally
         {
-            IOUtil.close( is );
-
-            IOUtil.close( os );
+        	is.close();
+            os.close();
         }
     }
 
@@ -1300,7 +1301,12 @@ public class JavadocUtil
         }
         finally
         {
-            IOUtil.close( os );
+            try {
+				os.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
             ps = null;
         }
     }
