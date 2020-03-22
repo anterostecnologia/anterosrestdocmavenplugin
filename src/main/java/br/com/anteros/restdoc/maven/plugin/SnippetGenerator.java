@@ -486,11 +486,10 @@ public class SnippetGenerator {
 							fieldOptional = NAO;
 						}
 						Required requiredAnn = field.getAnnotation(Required.class);
-						if (requiredAnn!=null) {
+						if (requiredAnn != null) {
 							fieldOptional = NAO;
 						}
 					}
-
 
 					if (field.isAnnotationPresent(Label.class)) {
 						Label ann = field.getAnnotation(Label.class);
@@ -721,7 +720,9 @@ public class SnippetGenerator {
 
 				for (Field field : fields) {
 					if (field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(JsonIgnore.class)
-							|| field.isAnnotationPresent(RemoteSynchIntegrationIgnore.class)) {
+							|| field.isAnnotationPresent(RemoteSynchIntegrationIgnore.class)
+							|| field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(CompositeId.class)
+							|| field.isAnnotationPresent(Version.class)) {
 						continue;
 					}
 
@@ -734,14 +735,14 @@ public class SnippetGenerator {
 					String fieldOptional = SIM;
 					String fieldValues = "";
 
-					if (field.isAnnotationPresent(Column.class)) {
+					if (field.isAnnotationPresent(Column.class) && !field.isAnnotationPresent(Version.class)) {
 						Column ann = field.getAnnotation(Column.class);
 						fieldDescription = ann.label();
 						if (ann.required()) {
 							fieldOptional = NAO;
 						}
 						Required requiredAnn = field.getAnnotation(Required.class);
-						if (requiredAnn!=null) {
+						if (requiredAnn != null) {
 							fieldOptional = NAO;
 						}
 					}
@@ -848,23 +849,18 @@ public class SnippetGenerator {
 						fieldType = BOOLEANO;
 						fieldValues = "True, False";
 					} else {
-						Field[] pkFields = getPkFields(field.getType());
-						boolean appendDelimiter = false;
-						String fds = "";
-						for (Field fd : pkFields) {
-							if (appendDelimiter) {
-								fds += ",";
-							}
-							fds += fd.getName();
-						}
+						Field codeField = getCodeField(field.getType());
+						if (codeField == null)
+							continue;
 
 						remoteIntegration = getRemoteSynchDataIntegrationAnnotation(field.getType());
 						fieldType += ENTIDADE;
 						if (remoteIntegration != null) {
-							fieldValues = "Chave {" + fds + "} -> <<" + anchors.get("_" + remoteIntegration.name())
-									+ ", " + remoteIntegration.name() + ">>";
+							fieldValues = "Chave {" + codeField.getName() + "} -> <<"
+									+ anchors.get("_" + remoteIntegration.name()) + ", " + remoteIntegration.name()
+									+ ">>";
 						} else {
-							fieldValues = "Chave {" + fds + "}";
+							fieldValues = "Chave {" + codeField.getName() + "}";
 						}
 					}
 
@@ -892,7 +888,7 @@ public class SnippetGenerator {
 					sw.close();
 				}
 
-				remoteIntegration =  getRemoteSynchDataIntegrationAnnotation(clazz);
+				remoteIntegration = getRemoteSynchDataIntegrationAnnotation(clazz);
 
 				Map<String, Object> dataModel = new HashMap<String, Object>();
 				dataModel.put(ENTITY_NAME, remoteIntegration.name());
@@ -1023,7 +1019,6 @@ public class SnippetGenerator {
 						}
 					}
 
-
 					if (field.isAnnotationPresent(Label.class)) {
 						Label ann = field.getAnnotation(Label.class);
 						fieldDescription = ann.value();
@@ -1039,7 +1034,7 @@ public class SnippetGenerator {
 								fieldType = fieldType + "(" + ann.precision() + ")";
 							}
 						}
-						schemaRealm.append("            " + fieldName + ": 'int"+required+"',\n");
+						schemaRealm.append("            " + fieldName + ": 'int" + required + "',\n");
 					} else if (ReflectionUtils.isExtendsClass(BigDecimal.class, field.getType())) {
 						fieldType = NUMERICO;
 						if (field.isAnnotationPresent(Column.class)) {
@@ -1050,7 +1045,7 @@ public class SnippetGenerator {
 								fieldType = fieldType + "(" + ann.precision() + ")";
 							}
 						}
-						schemaRealm.append("            " + fieldName + ": 'double"+required+"',\n");
+						schemaRealm.append("            " + fieldName + ": 'double" + required + "',\n");
 					} else if (ReflectionUtils.isExtendsClass(Number.class, field.getType())) {
 						fieldType = NUMERICO;
 						if (field.isAnnotationPresent(Column.class)) {
@@ -1066,7 +1061,7 @@ public class SnippetGenerator {
 								|| ReflectionUtils.isExtendsClass(BigInteger.class, field.getType())) {
 							schemaRealm.append("            " + fieldName + ": 'int',\n");
 						} else {
-							schemaRealm.append("            " + fieldName + ": 'double"+required+"',\n");
+							schemaRealm.append("            " + fieldName + ": 'double" + required + "',\n");
 						}
 					} else if (ReflectionUtils.isExtendsClass(String.class, field.getType())) {
 						fieldType = TEXTO;
@@ -1076,7 +1071,7 @@ public class SnippetGenerator {
 								fieldType = fieldType + "(" + ann.length() + ")";
 							}
 						}
-						schemaRealm.append("            " + fieldName + ": 'string"+required+"',\n");
+						schemaRealm.append("            " + fieldName + ": 'string" + required + "',\n");
 					} else if (ReflectionUtils.isExtendsClass(Date.class, field.getType())
 							|| (ReflectionUtils.isExtendsClass(java.sql.Date.class, field.getType()))) {
 						if (field.isAnnotationPresent(Temporal.class)) {
@@ -1094,7 +1089,7 @@ public class SnippetGenerator {
 						schemaRealm.append("            " + fieldName + ": 'date',\n");
 					} else if ((field.getType() == byte[].class) || (field.getType() == Byte[].class)) {
 						fieldType = TEXTO_BASE_64;
-						schemaRealm.append("            " + fieldName + ": 'string"+required+"',\n");
+						schemaRealm.append("            " + fieldName + ": 'string" + required + "',\n");
 					} else if (((ReflectionUtils.isImplementsInterface(field.getType(), Collection.class)
 							|| ReflectionUtils.isImplementsInterface(field.getType(), Set.class)))) {
 						fieldType = COLECAO;
@@ -1108,14 +1103,15 @@ public class SnippetGenerator {
 									if (ReflectionUtils.isExtendsClass(clazzG, Long.class)
 											|| ReflectionUtils.isExtendsClass(clazzG, Integer.class)
 											|| ReflectionUtils.isExtendsClass(clazzG, BigInteger.class)) {
-										schemaRealm.append("            " + fieldName + ": 'int[]"+required+"',\n");
+										schemaRealm.append("            " + fieldName + ": 'int[]" + required + "',\n");
 									} else {
-										schemaRealm.append("            " + fieldName + ": 'double[]"+required+"',\n");
+										schemaRealm
+												.append("            " + fieldName + ": 'double[]" + required + "',\n");
 									}
 								} else if (ReflectionUtils.isExtendsClass(clazzG, Date.class)) {
-									schemaRealm.append("            " + fieldName + ": 'date[]"+required+"',\n");
+									schemaRealm.append("            " + fieldName + ": 'date[]" + required + "',\n");
 								} else if (ReflectionUtils.isExtendsClass(clazzG, String.class)) {
-									schemaRealm.append("            " + fieldName + ": 'string[]"+required+"',\n");
+									schemaRealm.append("            " + fieldName + ": 'string[]" + required + "',\n");
 								}
 							} else {
 								ParameterizedType listType = (ParameterizedType) field.getGenericType();
@@ -1125,14 +1121,15 @@ public class SnippetGenerator {
 									if (ReflectionUtils.isExtendsClass(clazzG, Long.class)
 											|| ReflectionUtils.isExtendsClass(clazzG, Integer.class)
 											|| ReflectionUtils.isExtendsClass(clazzG, BigInteger.class)) {
-										schemaRealm.append("            " + fieldName + ": 'int[]"+required+"',\n");
+										schemaRealm.append("            " + fieldName + ": 'int[]" + required + "',\n");
 									} else {
-										schemaRealm.append("            " + fieldName + ": 'double[]"+required+"',\n");
+										schemaRealm
+												.append("            " + fieldName + ": 'double[]" + required + "',\n");
 									}
 								} else if (ReflectionUtils.isExtendsClass(clazzG, Date.class)) {
-									schemaRealm.append("            " + fieldName + ": 'date[]"+required+"',\n");
+									schemaRealm.append("            " + fieldName + ": 'date[]" + required + "',\n");
 								} else if (ReflectionUtils.isExtendsClass(clazzG, String.class)) {
-									schemaRealm.append("            " + fieldName + ": 'string[]"+required+"',\n");
+									schemaRealm.append("            " + fieldName + ": 'string[]" + required + "',\n");
 								}
 							}
 						} else {
@@ -1152,11 +1149,11 @@ public class SnippetGenerator {
 							if (remoteSynchMobile != null) {
 								fieldValues = "Chave [{" + fds + "}] -> <<" + anchors.get(remoteSynchMobile.name())
 										+ ", " + remoteSynchMobile.name() + ">>";
-								schemaRealm
-										.append("            " + fieldName + ": '" + remoteSynchMobile.name() + "[]',\n");
+								schemaRealm.append(
+										"            " + fieldName + ": '" + remoteSynchMobile.name() + "[]',\n");
 							} else {
 								fieldValues = "Chave [{" + fds + "}]";
-								schemaRealm.append("            " + fieldName + ": 'string[]"+required+"',\n");
+								schemaRealm.append("            " + fieldName + ": 'string[]" + required + "',\n");
 							}
 						}
 					} else if (field.getType().isEnum()) {
@@ -1181,11 +1178,11 @@ public class SnippetGenerator {
 								}
 							}
 						}
-						schemaRealm.append("            " + fieldName + ": 'string"+required+"',\n");
+						schemaRealm.append("            " + fieldName + ": 'string" + required + "',\n");
 					} else if ((field.getType() == boolean.class) || (field.getType() == Boolean.class)) {
 						fieldType = BOOLEANO;
 						fieldValues = "True, False";
-						schemaRealm.append("            " + fieldName + ": 'bool"+required+"',\n");
+						schemaRealm.append("            " + fieldName + ": 'bool" + required + "',\n");
 					} else {
 						Field[] pkFields = getPkFields(field.getType());
 						boolean appendDelimiter = false;
@@ -1202,10 +1199,11 @@ public class SnippetGenerator {
 						if (remoteSynchMobile != null) {
 							fieldValues = "Chave {" + fds + "} -> <<" + anchors.get(remoteSynchMobile.name()) + ", "
 									+ remoteSynchMobile.name() + ">>";
-							schemaRealm.append("            " + fieldName + ": '" + remoteSynchMobile.name() + ""+required+"',\n");
+							schemaRealm.append("            " + fieldName + ": '" + remoteSynchMobile.name() + ""
+									+ required + "',\n");
 						} else {
 							fieldValues = "Chave {" + fds + "}";
-							schemaRealm.append("            " + fieldName + ": 'string"+required+"',\n");
+							schemaRealm.append("            " + fieldName + ": 'string" + required + "',\n");
 						}
 					}
 
@@ -1251,7 +1249,7 @@ public class SnippetGenerator {
 
 		}
 	}
-	
+
 	public static RemoteSynchMobile getRemoteSynchMobileAnnotation(Class<?> clazz) {
 		while (clazz != Object.class) {
 			RemoteSynchMobile annotation = clazz.getAnnotation(RemoteSynchMobile.class);
@@ -1262,7 +1260,7 @@ public class SnippetGenerator {
 		}
 		return null;
 	}
-	
+
 	public static RemoteSynchDataIntegration getRemoteSynchDataIntegrationAnnotation(Class<?> clazz) {
 		while (clazz != Object.class) {
 			RemoteSynchDataIntegration annotation = clazz.getAnnotation(RemoteSynchDataIntegration.class);
@@ -1286,6 +1284,17 @@ public class SnippetGenerator {
 			}
 		}
 		return result.toArray(new Field[] {});
+	}
+
+	public static Field getCodeField(Class<?> clazz) {
+		Field[] fields = ReflectionUtils.getAllDeclaredFieldsAnnotatedWith(clazz, Code.class);
+
+		for (Field field : fields) {
+			if (field.isAnnotationPresent(Code.class)) {
+				return field;
+			}
+		}
+		return null;
 	}
 
 	public static Field[] getAllFields(Class<?> sourceClass, List<JavaClass> allClasses) throws ClassNotFoundException {
