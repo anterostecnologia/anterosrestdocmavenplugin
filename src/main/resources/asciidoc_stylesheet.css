@@ -2308,6 +2308,12 @@ p.tableblock {
 	.anteros.tenantid {
 		background-color: #E64A19;
 	}
+	.anteros.send {
+		background-color: #8bca40;
+	}
+	.anteros.receive {
+		background-color: #007fbf;
+	}
 	
 #searchInMainMenu {
 	width: 100%;

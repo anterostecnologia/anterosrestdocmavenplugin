@@ -23,6 +23,8 @@
 :anteros-version: pass:quotes[[.anteros.version]#VERSION#]
 :anteros-code: pass:quotes[[.anteros.code]#CODE#]
 :anteros-id: pass:quotes[[.anteros.id]#ID#]
+:anteros-send: pass:quotes[[.anteros.send]#SEND#]
+:anteros-receive: pass:quotes[[.anteros.receive]#RECEIVE#]
 :data-uri:
 
 
@@ -505,6 +507,12 @@ IRestResponse response = client.Execute(request);
 
 | {anteros-version}
 | Campo controlado pelo sistema que define a versão da entidade.
+
+| {anteros-send}
+| Indica que os dados da entidade podem ser enviados para a integração com o servidor.
+
+| {anteros-receive}
+| Indica que é possível receber os dados da entidade na integração.
 |===
 
 [[persistence1]]

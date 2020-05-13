@@ -117,6 +117,7 @@ import br.com.anteros.persistence.metadata.annotation.Version;
 import br.com.anteros.persistence.metadata.annotation.type.DiscriminatorType;
 import br.com.anteros.persistence.metadata.annotation.type.FetchMode;
 import br.com.anteros.persistence.metadata.annotation.type.TemporalType;
+import br.com.anteros.remote.synch.annotation.DataSynchDirection;
 import br.com.anteros.remote.synch.annotation.RemoteSynchDataIntegration;
 import br.com.anteros.remote.synch.annotation.RemoteSynchIntegrationIgnore;
 import br.com.anteros.remote.synch.annotation.RemoteSynchMobile;
@@ -728,160 +729,11 @@ public class SnippetGenerator {
 
 					Map<String, Object> dataModelItem = new HashMap<String, Object>();
 					StringWriter sw = new StringWriter();
-
-					String fieldName = field.getName();
-					String fieldType = "";
-					String fieldDescription = "";
-					String fieldOptional = SIM;
-					String fieldValues = "";
-
-					if (field.isAnnotationPresent(Column.class) && !field.isAnnotationPresent(Version.class)) {
-						Column ann = field.getAnnotation(Column.class);
-						fieldDescription = ann.label();
-						if (ann.required()) {
-							fieldOptional = NAO;
-						}
-						Required requiredAnn = field.getAnnotation(Required.class);
-						if (requiredAnn != null) {
-							fieldOptional = NAO;
-						}
+					
+					if (!generateField(field,dataModelItem, anchors)){
+						continue;
 					}
-
-					if (field.isAnnotationPresent(Label.class)) {
-						Label ann = field.getAnnotation(Label.class);
-						fieldDescription = ann.value();
-					}
-
-					if (ReflectionUtils.isExtendsClass(BigInteger.class, field.getType())) {
-						fieldType = NUMERICO;
-						if (field.isAnnotationPresent(Column.class)) {
-							Column ann = field.getAnnotation(Column.class);
-							if (ann.precision() > 0 == ann.scale() > 0) {
-								fieldType = fieldType + "(" + ann.precision() + "," + ann.scale() + ")";
-							} else if (ann.precision() > 0) {
-								fieldType = fieldType + "(" + ann.precision() + ")";
-							}
-						}
-					} else if (ReflectionUtils.isExtendsClass(BigDecimal.class, field.getType())) {
-						fieldType = NUMERICO;
-						if (field.isAnnotationPresent(Column.class)) {
-							Column ann = field.getAnnotation(Column.class);
-							if (ann.precision() > 0 && ann.scale() > 0) {
-								fieldType = fieldType + "(" + ann.precision() + "," + ann.scale() + ")";
-							} else if (ann.precision() > 0) {
-								fieldType = fieldType + "(" + ann.precision() + ")";
-							}
-						}
-					} else if (ReflectionUtils.isExtendsClass(Number.class, field.getType())) {
-						fieldType = NUMERICO;
-						if (field.isAnnotationPresent(Column.class)) {
-							Column ann = field.getAnnotation(Column.class);
-							if (ann.precision() > 0 && ann.scale() > 0) {
-								fieldType = fieldType + "(" + ann.precision() + "," + ann.scale() + ")";
-							} else if (ann.precision() > 0) {
-								fieldType = fieldType + "(" + ann.precision() + ")";
-							}
-						}
-					} else if (ReflectionUtils.isExtendsClass(String.class, field.getType())) {
-						fieldType = TEXTO;
-						if (field.isAnnotationPresent(Column.class)) {
-							Column ann = field.getAnnotation(Column.class);
-							if (ann.length() > 0) {
-								fieldType = fieldType + "(" + ann.length() + ")";
-							}
-						}
-					} else if (ReflectionUtils.isExtendsClass(Date.class, field.getType())
-							|| (ReflectionUtils.isExtendsClass(java.sql.Date.class, field.getType()))) {
-						if (field.isAnnotationPresent(Temporal.class)) {
-							Temporal temp = field.getAnnotation(Temporal.class);
-							if (temp.value() == TemporalType.DATE) {
-								fieldType = "Data : yyyy-MM-dd";
-							}
-							if (temp.value() == TemporalType.DATE_TIME) {
-								fieldType = "Data/hora : yyyy-MM-dd'T'HH:mm:ss.SSS";
-							}
-							if (temp.value() == TemporalType.TIME) {
-								fieldType = "Hora : HH:mm:ss.SSS";
-							}
-						}
-					} else if ((field.getType() == byte[].class) || (field.getType() == Byte[].class)) {
-						fieldType = TEXTO_BASE_64;
-					} else if (((ReflectionUtils.isImplementsInterface(field.getType(), Collection.class)
-							|| ReflectionUtils.isImplementsInterface(field.getType(), Set.class)))) {
-						fieldType = COLECAO;
-
-						if (field.isAnnotationPresent(Fetch.class) && (((Fetch) field.getAnnotation(Fetch.class)).mode()
-								.equals(FetchMode.ELEMENT_COLLECTION))) {
-							if (field.isAnnotationPresent(MapKeyColumn.class)) {
-								Class<?> clazzG = ReflectionUtils.getGenericMapTypes(field).get(1);
-								fieldValues = clazzG.getCanonicalName();
-							} else {
-								ParameterizedType listType = (ParameterizedType) field.getGenericType();
-								Class<?> clazzG = (Class<?>) listType.getActualTypeArguments()[0];
-								fieldValues = clazzG.getCanonicalName();
-							}
-						} else {
-							continue;
-						}
-					} else if (field.getType().isEnum()) {
-						fieldType = ENUMERACAO;
-						boolean appendDelimiter = false;
-						if (field.isEnumConstant()) {
-							for (Object ev : field.getType().getEnumConstants()) {
-								if (appendDelimiter)
-									fieldValues += ", ";
-								fieldValues += ev.toString();
-								appendDelimiter = true;
-							}
-						} else {
-							Method method = field.getType().getDeclaredMethod(VALUES);
-							Object obj = method.invoke(null);
-							if (obj != null) {
-								for (Object ev : (Object[]) obj) {
-									if (appendDelimiter)
-										fieldValues += ", ";
-									fieldValues += ev.toString();
-									appendDelimiter = true;
-								}
-							}
-						}
-					} else if ((field.getType() == boolean.class) || (field.getType() == Boolean.class)) {
-						fieldType = BOOLEANO;
-						fieldValues = "True, False";
-					} else {
-						Field codeField = getCodeField(field.getType());
-						if (codeField == null)
-							continue;
-
-						remoteIntegration = getRemoteSynchDataIntegrationAnnotation(field.getType());
-						fieldType += ENTIDADE;
-						if (remoteIntegration != null) {
-							fieldValues = "Chave {" + codeField.getName() + "} -> <<"
-									+ anchors.get("_" + remoteIntegration.name()) + ", " + remoteIntegration.name()
-									+ ">>";
-						} else {
-							fieldValues = "Chave {" + codeField.getName() + "}";
-						}
-					}
-
-					if (field.isAnnotationPresent(Id.class)) {
-						fieldName = "*" + fieldName + "*" + " -> {anteros-id}";
-					} else if (field.isAnnotationPresent(TenantId.class)) {
-						fieldName = "*" + fieldName + "*" + " -> {anteros-tenant-id}";
-					} else if (field.isAnnotationPresent(CompanyId.class)) {
-						fieldName = "*" + fieldName + "*" + " -> {anteros-company-id}";
-					} else if (field.isAnnotationPresent(Code.class)) {
-						fieldName = "*" + fieldName + "*" + " -> {anteros-code}";
-					} else if (field.isAnnotationPresent(Version.class)) {
-						fieldName = "*" + fieldName + "*" + " -> {anteros-version}";
-					} else {
-						fieldName = "*" + fieldName + "*";
-					}
-					dataModelItem.put(FIELD_NAME, fieldName);
-					dataModelItem.put(FIELD_TYPE, fieldType);
-					dataModelItem.put(FIELD_VALUES, fieldValues);
-					dataModelItem.put(FIELD_OPTIONAL, fieldOptional);
-					dataModelItem.put(FIELD_DESCRIPTION, fieldDescription);
+					
 					itemMobileTemplate.process(dataModelItem, sw);
 					sw.flush();
 					mobileItems.append(sw.toString()).append("\n");
@@ -889,20 +741,257 @@ public class SnippetGenerator {
 				}
 
 				remoteIntegration = getRemoteSynchDataIntegrationAnnotation(clazz);
+				
+				String direction = "";
+				
+				if (remoteIntegration.direction()[0].equals(DataSynchDirection.SEND)) {
+					direction = " {anteros-send}";
+				}
+				
+				if (remoteIntegration.direction().length==2) {
+					direction = " {anteros-send} {anteros-receive}";
+				} else if (remoteIntegration.direction()[0].equals(DataSynchDirection.RECEIVE)) {
+					direction = " {anteros-receive}";
+				}
 
 				Map<String, Object> dataModel = new HashMap<String, Object>();
-				dataModel.put(ENTITY_NAME, remoteIntegration.name());
+				dataModel.put(ENTITY_NAME, remoteIntegration.name()+direction);
 				dataModel.put(ENTITY_ID, anchors.get("_" + remoteIntegration.name()));
 				dataModel.put(ENTITY_DESCRIPTION,
 						(StringUtils.isEmpty(cld.getComment()) ? remoteIntegration.description() : cld.getComment()));
 				dataModel.put(MODEL_ITEM, mobileItems.toString());
 				template.process(dataModel, w);
 				w.flush();
+				
+				/*
+				 * Processando JoinTables
+				 */
+				for (Field field : fields) {
+					if (field.isAnnotationPresent(RemoteSynchDataIntegration.class)) {						
+						RemoteSynchDataIntegration annotation = field.getAnnotation(RemoteSynchDataIntegration.class);
+						remoteIntegration = getRemoteSynchDataIntegrationAnnotation(field.getClass());
+						generateDataIntegrationJoinTablePersistence(integrationClasses, fields, field, anchors,configuration, annotation, w);
+					}
+				}				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
 		}
+	}
+	
+	private static boolean generateField(Field field, Map<String, Object> dataModelItem, Map<String, String> anchors) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		String fieldName = field.getName();
+		String fieldType = "";
+		String fieldDescription = "";
+		String fieldOptional = SIM;
+		String fieldValues = "";
+
+		if (field.isAnnotationPresent(Column.class) && !field.isAnnotationPresent(Version.class)) {
+			Column ann = field.getAnnotation(Column.class);
+			fieldDescription = ann.label();
+			if (ann.required()) {
+				fieldOptional = NAO;
+			}
+			Required requiredAnn = field.getAnnotation(Required.class);
+			if (requiredAnn != null) {
+				fieldOptional = NAO;
+			}
+		}
+
+		if (field.isAnnotationPresent(Label.class)) {
+			Label ann = field.getAnnotation(Label.class);
+			fieldDescription = ann.value();
+		}
+
+		if (ReflectionUtils.isExtendsClass(BigInteger.class, field.getType())) {
+			fieldType = NUMERICO;
+			if (field.isAnnotationPresent(Column.class)) {
+				Column ann = field.getAnnotation(Column.class);
+				if (ann.precision() > 0 == ann.scale() > 0) {
+					fieldType = fieldType + "(" + ann.precision() + "," + ann.scale() + ")";
+				} else if (ann.precision() > 0) {
+					fieldType = fieldType + "(" + ann.precision() + ")";
+				}
+			}
+		} else if (ReflectionUtils.isExtendsClass(BigDecimal.class, field.getType())) {
+			fieldType = NUMERICO;
+			if (field.isAnnotationPresent(Column.class)) {
+				Column ann = field.getAnnotation(Column.class);
+				if (ann.precision() > 0 && ann.scale() > 0) {
+					fieldType = fieldType + "(" + ann.precision() + "," + ann.scale() + ")";
+				} else if (ann.precision() > 0) {
+					fieldType = fieldType + "(" + ann.precision() + ")";
+				}
+			}
+		} else if (ReflectionUtils.isExtendsClass(Number.class, field.getType())) {
+			fieldType = NUMERICO;
+			if (field.isAnnotationPresent(Column.class)) {
+				Column ann = field.getAnnotation(Column.class);
+				if (ann.precision() > 0 && ann.scale() > 0) {
+					fieldType = fieldType + "(" + ann.precision() + "," + ann.scale() + ")";
+				} else if (ann.precision() > 0) {
+					fieldType = fieldType + "(" + ann.precision() + ")";
+				}
+			}
+		} else if (ReflectionUtils.isExtendsClass(String.class, field.getType())) {
+			fieldType = TEXTO;
+			if (field.isAnnotationPresent(Column.class)) {
+				Column ann = field.getAnnotation(Column.class);
+				if (ann.length() > 0) {
+					fieldType = fieldType + "(" + ann.length() + ")";
+				}
+			}
+		} else if (ReflectionUtils.isExtendsClass(Date.class, field.getType())
+				|| (ReflectionUtils.isExtendsClass(java.sql.Date.class, field.getType()))) {
+			if (field.isAnnotationPresent(Temporal.class)) {
+				Temporal temp = field.getAnnotation(Temporal.class);
+				if (temp.value() == TemporalType.DATE) {
+					fieldType = "Data : yyyy-MM-dd";
+				}
+				if (temp.value() == TemporalType.DATE_TIME) {
+					fieldType = "Data/hora : yyyy-MM-dd'T'HH:mm:ss.SSS";
+				}
+				if (temp.value() == TemporalType.TIME) {
+					fieldType = "Hora : HH:mm:ss.SSS";
+				}
+			}
+		} else if ((field.getType() == byte[].class) || (field.getType() == Byte[].class)) {
+			fieldType = TEXTO_BASE_64;
+			
+		} else if (((ReflectionUtils.isImplementsInterface(field.getType(), Collection.class)
+				|| ReflectionUtils.isImplementsInterface(field.getType(), Set.class)))) {
+			fieldType = COLECAO;
+
+			if (field.isAnnotationPresent(Fetch.class) && (((Fetch) field.getAnnotation(Fetch.class)).mode()
+					.equals(FetchMode.ELEMENT_COLLECTION))) {
+				if (field.isAnnotationPresent(MapKeyColumn.class)) {
+					Class<?> clazzG = ReflectionUtils.getGenericMapTypes(field).get(1);
+					fieldValues = clazzG.getCanonicalName();
+				}						
+			} else {
+				return false;
+			}
+		} else if (field.getType().isEnum()) {
+			fieldType = ENUMERACAO;
+			boolean appendDelimiter = false;
+			if (field.isEnumConstant()) {
+				for (Object ev : field.getType().getEnumConstants()) {
+					if (appendDelimiter)
+						fieldValues += ", ";
+					fieldValues += ev.toString();
+					appendDelimiter = true;
+				}
+			} else {
+				Method method = field.getType().getDeclaredMethod(VALUES);
+				Object obj = method.invoke(null);
+				if (obj != null) {
+					for (Object ev : (Object[]) obj) {
+						if (appendDelimiter)
+							fieldValues += ", ";
+						fieldValues += ev.toString();
+						appendDelimiter = true;
+					}
+				}
+			}
+		} else if ((field.getType() == boolean.class) || (field.getType() == Boolean.class)) {
+			fieldType = BOOLEANO;
+			fieldValues = "True, False";
+		} else {
+			Field codeField = getCodeField(field.getType());
+			if (codeField == null)
+				return false;
+
+			RemoteSynchDataIntegration remoteIntegration = getRemoteSynchDataIntegrationAnnotation(field.getType());
+			fieldType += ENTIDADE;
+			if (remoteIntegration != null) {
+				fieldValues = "Chave {" + codeField.getName() + "} -> <<"
+						+ anchors.get("_" + remoteIntegration.name()) + ", " + remoteIntegration.name()
+						+ ">>";
+			} else {
+				fieldValues = "Chave {" + codeField.getName() + "}";
+			}
+		}
+
+		if (field.isAnnotationPresent(Id.class)) {
+			fieldName = "*" + fieldName + "*" + " -> {anteros-id}";
+		} else if (field.isAnnotationPresent(TenantId.class)) {
+			fieldName = "*" + fieldName + "*" + " -> {anteros-tenant-id}";
+		} else if (field.isAnnotationPresent(CompanyId.class)) {
+			fieldName = "*" + fieldName + "*" + " -> {anteros-company-id}";
+		} else if (field.isAnnotationPresent(Code.class)) {
+			fieldName = "*" + fieldName + "*" + " -> {anteros-code}";
+		} else if (field.isAnnotationPresent(Version.class)) {
+			fieldName = "*" + fieldName + "*" + " -> {anteros-version}";
+		} else {
+			fieldName = "*" + fieldName + "*";
+		}
+		dataModelItem.put(FIELD_NAME, fieldName);
+		dataModelItem.put(FIELD_TYPE, fieldType);
+		dataModelItem.put(FIELD_VALUES, fieldValues);
+		dataModelItem.put(FIELD_OPTIONAL, fieldOptional);
+		dataModelItem.put(FIELD_DESCRIPTION, fieldDescription);
+		return true;
+	}
+	
+	
+	public static void generateDataIntegrationJoinTablePersistence(List<JavaClass> integrationClasses, Field[] fields, Field field, Map<String, String> anchors, Configuration configuration, RemoteSynchDataIntegration annotation, Writer w) throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException, TemplateException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Template template = configuration.getTemplate(TEMPLATE_INTEGRATION_PERSISTENCE);
+		
+		Template itemMobileTemplate = configuration.getTemplate(TEMPLATE_INTEGRATION_PERSISTENCE_ITEM);
+		StringBuilder mobileItems = new StringBuilder();
+		
+		
+		Map<String, Object> dataModelItem = new HashMap<String, Object>();
+		StringWriter sw = new StringWriter();
+		
+		
+		for (Field fld : fields) {
+			if (fld.isAnnotationPresent(Code.class)) {
+				generateField(fld,dataModelItem, anchors);
+				dataModelItem.put(FIELD_OPTIONAL, NAO);
+			}
+		}
+		
+		itemMobileTemplate.process(dataModelItem, sw);
+		sw.flush();
+		mobileItems.append(sw.toString()).append("\n");
+		sw.close();
+		
+		
+		dataModelItem = new HashMap<String, Object>();
+		sw = new StringWriter();
+		
+		ParameterizedType listType = (ParameterizedType) field.getGenericType();
+		Class<?> clazz2 = (Class<?>) listType.getActualTypeArguments()[0];
+		
+		for (JavaClass jc : integrationClasses) {
+			if (jc.getCanonicalName().equals(clazz2.getCanonicalName())) {
+				Field[] fieldsTarget = ReflectionUtils.getAllDeclaredFields(clazz2);
+				for (Field fd : fieldsTarget) {
+					if (fd.isAnnotationPresent(Code.class)) {
+						generateField(fd,dataModelItem, anchors);
+						dataModelItem.put(FIELD_OPTIONAL, NAO);
+					}
+				}
+			}
+		}	
+		
+		itemMobileTemplate.process(dataModelItem, sw);
+		sw.flush();
+		mobileItems.append(sw.toString()).append("\n");
+		sw.close();
+		
+		
+		Map<String, Object> dataModel = new HashMap<String, Object>();
+		dataModel.put(ENTITY_NAME, annotation.name());
+		dataModel.put(ENTITY_ID, UUID.randomUUID().toString());
+		dataModel.put(ENTITY_DESCRIPTION,annotation.description());
+		dataModel.put(MODEL_ITEM, mobileItems.toString());
+		template.process(dataModel, w);
+		w.flush();
+
+		
 	}
 
 	public static void generateMobilePersistence(String baseUrl, Writer w, List<JavaClass> mobileClasses,
