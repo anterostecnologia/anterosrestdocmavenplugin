@@ -5,7 +5,7 @@
 
 	<groupId>br.com.anteros</groupId>
 	<artifactId>Anteros-RestDoc-Maven-Plugin</artifactId>
-	<version>1.0.8</version>
+	<version>1.0.9</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Anteros Rest Documentation Maven Plugin</name>
@@ -373,6 +373,12 @@
 				</plugins>
 
 			</build>
+			<distributionManagement>
+				<repository>
+					<id>local-REPO</id>
+					<url>http://vps4657.publiccloud.com.br:8082/artifactory/libs-release-local</url>
+				</repository>
+			</distributionManagement>
 		</profile>
 
 		<profile>
