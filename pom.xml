@@ -5,7 +5,7 @@
 
 	<groupId>br.com.anteros</groupId>
 	<artifactId>Anteros-RestDoc-Maven-Plugin</artifactId>
-	<version>1.0.9</version>
+	<version>1.0.10</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Anteros Rest Documentation Maven Plugin</name>
@@ -17,7 +17,7 @@
 		<bintray.package>anteros-restdoc-maven-plugin</bintray.package>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<jackson.version>[2.9.10.1,)</jackson.version>
+		<jackson.version>2.9.10</jackson.version>
 	</properties>
 
 	<description>
@@ -149,7 +149,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-jsonSchema</artifactId>
-			<version>2.10.1</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
@@ -469,6 +469,5 @@
 				</repository>
 			</repositories>
 		</profile>
-	</profiles>
-
+	</profiles>	
 </project>
