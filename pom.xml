@@ -5,7 +5,7 @@
 
 	<groupId>br.com.anteros</groupId>
 	<artifactId>Anteros-RestDoc-Maven-Plugin</artifactId>
-	<version>1.0.10</version>
+	<version>1.0.13</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Anteros Rest Documentation Maven Plugin</name>
@@ -158,35 +158,6 @@
 		</dependency>
 	</dependencies>
 
-	<repositories>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-puravida-software-repo</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/puravida-software/repo</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>spring</id>
-			<name>extensions</name>
-			<url>https://repo.spring.io/release</url>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-puravida-software-repo</id>
-			<name>bintray-plugins</name>
-			<url>https://dl.bintray.com/puravida-software/repo</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<profiles>
 		<profile>
@@ -372,13 +343,7 @@
 					</plugin>
 				</plugins>
 
-			</build>
-			<distributionManagement>
-				<repository>
-					<id>local-REPO</id>
-					<url>http://vps4657.publiccloud.com.br:8082/artifactory/libs-release-local</url>
-				</repository>
-			</distributionManagement>
+			</build>			
 		</profile>
 
 		<profile>

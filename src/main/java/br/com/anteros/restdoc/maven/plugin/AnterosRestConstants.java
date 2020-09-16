@@ -36,7 +36,7 @@ public class AnterosRestConstants {
 	public static final String DOCLET_PATH = "-docletpath";
 	public static final String DOCLET_OPTION = "-doclet";
 	public static final String HTTP_URL = "http_url";
-	public static final String CURL = "curl";
+	public static final String CURL = "curl"; 
 	public static final String JSON_SCHEMA = "json_schema";
 	public static final String PASSWORD = "<PASSWORD>";
 	public static final String USER = "<USER>";
