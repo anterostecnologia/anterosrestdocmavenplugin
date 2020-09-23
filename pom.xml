@@ -5,7 +5,7 @@
 
 	<groupId>br.com.anteros</groupId>
 	<artifactId>Anteros-RestDoc-Maven-Plugin</artifactId>
-	<version>1.0.13</version>
+	<version>1.0.14</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Anteros Rest Documentation Maven Plugin</name>
@@ -88,12 +88,12 @@
 		<dependency>
 			<groupId>br.com.anteros</groupId>
 			<artifactId>Anteros-Core</artifactId>
-			<version>[1.0.0,)</version>
+			<version>[1.2.6,)</version>
 		</dependency>
 		<dependency>
 			<groupId>br.com.anteros</groupId>
 			<artifactId>Anteros-Remote-Synch</artifactId>
-			<version>[1.0.0,)</version>
+			<version>[1.0.10,)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
