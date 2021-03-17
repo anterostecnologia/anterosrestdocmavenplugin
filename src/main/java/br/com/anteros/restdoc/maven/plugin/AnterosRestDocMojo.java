@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -51,6 +52,7 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -59,6 +61,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -339,6 +342,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		parameters.add(SPRING_WEB_CONTROLLER);
 		parameters.add(DOCLET_OPTION);
 		parameters.add(AnterosRestDoclet.class.getName());
+		parameters.add("-verbose");
 		parameters.add(CLASSPATH_OPTION);
 		parameters.add(getClassPath());
 
@@ -347,6 +351,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		 * geradas na documentação da API REST usando um Doclet customizado
 		 * (AnterosRestDoclet)
 		 */
+		
 		com.sun.tools.javadoc.Main.execute(parameters.toArray(new String[] {}));
 
 		/**
@@ -518,12 +523,13 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 		File itemsFile = new File(filePath, ITEMS_DATA_INTEGRATION_ADOC);
 
-		Writer writer = new FileWriter(itemsFile);
+		OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(itemsFile), StandardCharsets.UTF_8);
 		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
 		Thread.currentThread().setContextClassLoader(urlClassLoader);
 
 		Configuration configuration = new Configuration();
+		configuration.setEncoding(Locale.getDefault(), "UTF-8");
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		Template template = configuration.getTemplate(TEMPLATE_INTEGRATION_PERSISTENCE_TOPIC);
 		template.process(new HashMap<>(), writer);
@@ -595,12 +601,13 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 		File itemsFile = new File(filePath, ITEMS_MOBILE_ADOC);
 
-		Writer writer = new FileWriter(itemsFile);
+		OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(itemsFile), StandardCharsets.UTF_8);
 		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
 		Thread.currentThread().setContextClassLoader(urlClassLoader);
 
 		Configuration configuration = new Configuration();
+		configuration.setEncoding(Locale.getDefault(), "UTF-8");
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		Template template = configuration.getTemplate(TEMPLATE_MOBILE_PERSISTENCE_TOPIC);
 		template.process(new HashMap<>(), writer);
@@ -652,7 +659,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			IllegalArgumentException, InvocationTargetException {
 		File itemsFile = new File(filePath, ITEMS_ADOC);
 
-		Writer writer = new FileWriter(itemsFile);
+		OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(itemsFile), StandardCharsets.UTF_8);
 		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
 		Thread.currentThread().setContextClassLoader(urlClassLoader);
@@ -669,7 +676,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			IllegalArgumentException, InvocationTargetException {
 		File itemsFile = new File(filePath, ITEMS_SECURITY_ADOC);
 
-		Writer writer = new FileWriter(itemsFile);
+		OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(itemsFile), StandardCharsets.UTF_8);
 		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
 		Thread.currentThread().setContextClassLoader(urlClassLoader);
@@ -697,8 +704,9 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		}
 
 		File itemsFile = new File(filePath, ITEMS_PERSISTENCE_ADOC);
-
-		Writer writer = new FileWriter(itemsFile);
+		
+		OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(itemsFile), StandardCharsets.UTF_8);
+		
 		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
 		Thread.currentThread().setContextClassLoader(urlClassLoader);
@@ -727,7 +735,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		
 		File itemsFile = new File(filePath, ITEMS_PERSISTENCE_SECURITY_ADOC);
 
-		Writer writer = new FileWriter(itemsFile);
+		OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(itemsFile), StandardCharsets.UTF_8);
 		URLClassLoader urlClassLoader = new URLClassLoader(createClassPath().toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
 		Thread.currentThread().setContextClassLoader(urlClassLoader);
@@ -787,7 +795,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 		for (String s : compileSourceRoots) {
 			if (appendDelimiter)
-				classPath.append(":");
+				classPath.append(File.pathSeparator);
 			classPath.append(s);
 			appendDelimiter = true;
 		}
@@ -802,7 +810,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 		for (String s : classpathElements) {
 			if (appendDelimiter)
-				classPath.append(":");
+				classPath.append(File.pathSeparator);
 			classPath.append(s);
 			appendDelimiter = true;
 		}

@@ -69,7 +69,7 @@ public class AnterosRestDoclet extends Doclet {
 				sourcePath.append(option[1]);
 				String[] split = option[1].split(File.pathSeparator);
 				jsonTempFile = split[split.length - 1];
-				String tmp = ":" + jsonTempFile;
+				String tmp = File.pathSeparator + jsonTempFile;
 				sourcePath.delete(option[1].indexOf(tmp), option[1].indexOf(tmp) + tmp.length());
 				break;
 			}

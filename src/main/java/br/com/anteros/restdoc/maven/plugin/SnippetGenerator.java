@@ -85,6 +85,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -167,6 +168,7 @@ public class SnippetGenerator {
 			ParseException, IOException, TemplateException, InstantiationException, IllegalAccessException,
 			NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
 		Configuration configuration = new Configuration();
+		configuration.setEncoding(Locale.getDefault(), "UTF-8");
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -230,6 +232,7 @@ public class SnippetGenerator {
 			 * Resource
 			 */
 			Template template = null;
+			
 			if (type.equals(SECURITY)) {
 				template = configuration.getTemplate(TEMPLATE_RESOURCE_SECURITY);
 			} else if (type.equals(GENERAL)) {
@@ -374,6 +377,7 @@ public class SnippetGenerator {
 			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		Configuration configuration = new Configuration();
+		configuration.setEncoding(Locale.getDefault(), "UTF-8");
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -651,6 +655,7 @@ public class SnippetGenerator {
 			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		Configuration configuration = new Configuration();
+		configuration.setEncoding(Locale.getDefault(), "UTF-8");
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -1000,6 +1005,7 @@ public class SnippetGenerator {
 			TemplateException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		Configuration configuration = new Configuration();
+		configuration.setEncoding(Locale.getDefault(), "UTF-8");
 		configuration.setTemplateLoader(new AnterosFreeMarkerTemplateLoader(AnterosRestDoclet.class, "/"));
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);

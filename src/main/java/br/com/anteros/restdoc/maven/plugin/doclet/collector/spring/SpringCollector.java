@@ -69,9 +69,14 @@ public class SpringCollector extends AbstractCollector {
 	@Override
 	protected boolean shouldIgnoreClass(ClassDoc classDoc) {
 		// If found a controller annotation then don't ignore this class.
-		for (AnnotationDesc classAnnotation : classDoc.annotations())
-			if (CONTROLLER_ANNOTATION.contains(getAnnotationName(classAnnotation)))
-				return false;
+		for (AnnotationDesc classAnnotation : classDoc.annotations()) {
+			String name = getAnnotationName(classAnnotation);
+			for (String controller : CONTROLLER_ANNOTATION) {
+				if (controller.equals(name) || controller.contains(name)){
+				   return false;
+				}
+			}
+		}
 
 		// If not found then ignore this class.
 		return true;
@@ -80,9 +85,11 @@ public class SpringCollector extends AbstractCollector {
 	@Override
 	protected boolean shouldIgnoreMethod(MethodDoc methodDoc) {
 		// If found a mapping annotation then don't ignore this class.
-		for (AnnotationDesc classAnnotation : methodDoc.annotations())
-			if (MAPPING_ANNOTATION.equals(getAnnotationName(classAnnotation)))
+		for (AnnotationDesc classAnnotation : methodDoc.annotations()) {
+			String name = getAnnotationName(classAnnotation);
+			if (MAPPING_ANNOTATION.equals(name) || MAPPING_ANNOTATION.contains(name))
 				return false;
+		}
 
 		// If not found then ignore this class.
 		return true;
@@ -93,7 +100,8 @@ public class SpringCollector extends AbstractCollector {
 		// Look for a request mapping annotation
 		for (AnnotationDesc annotation : doc.annotations()) {
 			// If found then extract the value (paths) and the methods.
-			if (MAPPING_ANNOTATION.equals(getAnnotationName(annotation))) {
+			String name = getAnnotationName(annotation);
+			if (MAPPING_ANNOTATION.equals(name) || MAPPING_ANNOTATION.contains(name)) {
 
 				// Get http methods from annotation
 				Collection<String> httpMethods = new LinkedHashSet<String>();
@@ -126,7 +134,8 @@ public class SpringCollector extends AbstractCollector {
 
 		for (Parameter parameter : methodDoc.parameters()) {
 			for (AnnotationDesc annotation : parameter.annotations()) {
-				if (getAnnotationName(annotation).equals(PATHVAR_ANNOTATION)) {
+				String _name = getAnnotationName(annotation);
+				if (PATHVAR_ANNOTATION.contains(_name) ||PATHVAR_ANNOTATION.equals(_name)) {
 					String name = parameter.name();
 					Collection<String> values = getElementValue(annotation, "value");
 					if (!values.isEmpty())
@@ -157,7 +166,8 @@ public class SpringCollector extends AbstractCollector {
 
 		for (Parameter parameter : methodDoc.parameters()) {
 			for (AnnotationDesc annotation : parameter.annotations()) {
-				if (getAnnotationName(annotation).equals(PARAM_ANNOTATION)) {
+				String _name = getAnnotationName(annotation);
+				if (PARAM_ANNOTATION.equals(_name) || PARAM_ANNOTATION.contains(_name)) {
 					String name = parameter.name();
 					List<String> values = getElementValue(annotation, "value");
 					if (!values.isEmpty())
@@ -201,7 +211,8 @@ public class SpringCollector extends AbstractCollector {
 
 		for (Parameter parameter : methodDoc.parameters()) {
 			for (AnnotationDesc annotation : parameter.annotations()) {
-				if (getAnnotationName(annotation).equals(REQUESTBODY_ANNOTATION)) {
+				String _name = getAnnotationName(annotation);
+				if (REQUESTBODY_ANNOTATION.equals(_name) || REQUESTBODY_ANNOTATION.contains(_name)) {
 
 					// first check for special tag, then check regular param
 					// tag, finally default to empty string
