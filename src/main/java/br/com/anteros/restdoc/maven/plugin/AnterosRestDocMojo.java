@@ -127,7 +127,7 @@ import freemarker.template.TemplateNotFoundException;
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class AnterosRestDocMojo extends AsciidoctorMojo {
 
-	/**
+	/** 
 	 * Diretório de saída do arquivo gerado (.html, .pdf, etc.)
 	 */
 	@Parameter(defaultValue = "${project.build.directory}", property = "outputDir", required = true)
