@@ -1,12 +1,12 @@
 /*******************************************************************************
  *  Copyright 2017 Anteros Tecnologia
- *   
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ *
  *  	http://www.apache.org/licenses/LICENSE-2.0
- *   
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,223 +15,209 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.doclet.collector.spring;
 
-import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getAnnotationName;
-import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getElementValue;
-import static br.com.anteros.restdoc.maven.plugin.util.CommonUtils.firstNonEmpty;
-import static br.com.anteros.restdoc.maven.plugin.util.CommonUtils.isEmpty;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.PATHVAR_TAG;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.QUERYPARAM_TAG;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.REQUESTBODY_TAG;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.findParamText;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.util.Arrays.asList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-
-import com.sun.javadoc.AnnotationDesc;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.ParamTag;
-import com.sun.javadoc.Parameter;
-import com.sun.javadoc.ProgramElementDoc;
-import com.sun.javadoc.Tag;
 
 import br.com.anteros.restdoc.maven.plugin.doclet.collector.AbstractCollector;
 import br.com.anteros.restdoc.maven.plugin.doclet.collector.EndpointMapping;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.PathVar;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.QueryParam;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.RequestBody;
+import com.sun.source.util.DocTrees;
 
-/**
- * Coletor de dados para projetos que utilizam o Spring Framework
- * @see <a href="https://spring.io/">Spring Framework</a>
- * 
- * @author Edson Martins
- * @author Eduardo Albertini
- *
- */
+import javax.lang.model.element.*;
+import java.util.*;
+
+import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getAnnotationName;
+import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getElementValue;
+import static br.com.anteros.restdoc.maven.plugin.util.CommonUtils.firstNonEmpty;
+import static br.com.anteros.restdoc.maven.plugin.util.CommonUtils.isEmpty;
+import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.*;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.util.Arrays.asList;
+
 public class SpringCollector extends AbstractCollector {
 
-	protected static final List<String> CONTROLLER_ANNOTATION = Arrays.asList(
-			"org.springframework.stereotype.Controller",
-			"org.springframework.web.bind.annotation.RestController");
-	protected static final String MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.RequestMapping";
-	protected static final String PATHVAR_ANNOTATION = "org.springframework.web.bind.annotation.PathVariable";
-	protected static final String PARAM_ANNOTATION = "org.springframework.web.bind.annotation.RequestParam";
-	protected static final String REQUESTBODY_ANNOTATION = "org.springframework.web.bind.annotation.RequestBody";
+    protected static final List<String> CONTROLLER_ANNOTATION = Arrays.asList("org.springframework.stereotype.Controller",
+            "org.springframework.web.bind.annotation.RestController");
+    protected static final String MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.RequestMapping";
+    protected static final String PATHVAR_ANNOTATION = "org.springframework.web.bind.annotation.PathVariable";
+    protected static final String PARAM_ANNOTATION = "org.springframework.web.bind.annotation.RequestParam";
+    protected static final String REQUESTBODY_ANNOTATION = "org.springframework.web.bind.annotation.RequestBody";
 
-	@Override
-	protected boolean shouldIgnoreClass(ClassDoc classDoc) {
-		// If found a controller annotation then don't ignore this class.
-		for (AnnotationDesc classAnnotation : classDoc.annotations()) {
-			String name = getAnnotationName(classAnnotation);
-			for (String controller : CONTROLLER_ANNOTATION) {
-				if (controller.equals(name) || controller.contains(name)){
-				   return false;
-				}
-			}
-		}
+    public SpringCollector(DocTrees treeUtils) {
+        super(treeUtils);
+    }
 
-		// If not found then ignore this class.
-		return true;
-	}
+    @Override
+    protected boolean shouldIgnoreClass(TypeElement classDoc) {
+        //Se for encontrada uma anotação de controlador, não ignore esta classe.
+        for (AnnotationMirror classAnnotation : classDoc.getAnnotationMirrors()) {
+            if (CONTROLLER_ANNOTATION.contains(getAnnotationName(classAnnotation))) {
+                return false;
+            }
+        }
+        //Se não for encontrado, ignore esta classe.
+        return true;
+    }
 
-	@Override
-	protected boolean shouldIgnoreMethod(MethodDoc methodDoc) {
-		// If found a mapping annotation then don't ignore this class.
-		for (AnnotationDesc classAnnotation : methodDoc.annotations()) {
-			String name = getAnnotationName(classAnnotation);
-			if (MAPPING_ANNOTATION.equals(name) || MAPPING_ANNOTATION.contains(name))
-				return false;
-		}
+    @Override
+    protected boolean shouldIgnoreMethod(ExecutableElement methodDoc) {
+        //Se for encontrada uma anotação de mapeamento, não ignore esta classe.
+        for (AnnotationMirror classAnnotation : methodDoc.getAnnotationMirrors())
+            if (MAPPING_ANNOTATION.equals(getAnnotationName(classAnnotation)))
+                return false;
 
-		// If not found then ignore this class.
-		return true;
-	}
+        //Se não for encontrado, ignore esta classe.
+        return true;
+    }
 
-	@Override
-	protected EndpointMapping getEndpointMapping(ProgramElementDoc doc) {
-		// Look for a request mapping annotation
-		for (AnnotationDesc annotation : doc.annotations()) {
-			// If found then extract the value (paths) and the methods.
-			String name = getAnnotationName(annotation);
-			if (MAPPING_ANNOTATION.equals(name) || MAPPING_ANNOTATION.contains(name)) {
+    @Override
+    protected EndpointMapping getEndpointMapping(Element doc) {
+        //Procure uma anotação de mapeamento de solicitação
+        for (AnnotationMirror annotation : doc.getAnnotationMirrors()) {
+            //Se encontrado, extraia o valor (caminhos) e os métodos.
+            if (MAPPING_ANNOTATION.equals(getAnnotationName(annotation))) {
 
-				// Get http methods from annotation
-				Collection<String> httpMethods = new LinkedHashSet<String>();
-				for (String value : getElementValue(annotation, "method")) {
-					httpMethods.add(value.substring(value.lastIndexOf(".") + 1));
-				}
+                //Obtenha métodos http de anotação
+                Collection<String> httpMethods = new LinkedHashSet<>();
+                for (String value : getElementValue(annotation, "method")) {
+                    httpMethods.add(value.substring(value.lastIndexOf(".") + 1));
+                }
 
-				return new EndpointMapping(
-						new LinkedHashSet<String>(getElementValue(annotation, "value")),
-						httpMethods,
-						new LinkedHashSet<String>(getElementValue(annotation, "consumes")),
-						new LinkedHashSet<String>(getElementValue(annotation, "produces")));
-			}
-		}
+                return new EndpointMapping(
+                        new LinkedHashSet<>(getElementValue(annotation, "value")),
+                        httpMethods,
+                        new LinkedHashSet<>(getElementValue(annotation, "consumes")),
+                        new LinkedHashSet<>(getElementValue(annotation, "produces"))
+                );
+            }
+        }
 
-		// Simply return an empty grouping if no request mapping was found.
-		return new EndpointMapping(
-				Collections.<String>emptySet(),
-				Collections.<String>emptySet(),
-				Collections.<String>emptySet(),
-				Collections.<String>emptySet());
-	}
+        //Simplesmente retorne um agrupamento vazio se nenhum mapeamento de solicitação foi encontrado.
+        return new EndpointMapping(
+                Collections.<String>emptySet(),
+                Collections.<String>emptySet(),
+                Collections.<String>emptySet(),
+                Collections.<String>emptySet()
+        );
+    }
 
-	@Override
-	protected Collection<PathVar> generatePathVars(MethodDoc methodDoc) {
-		Collection<PathVar> retVal = new ArrayList<PathVar>();
+    @Override
+    protected Collection<PathVar> generatePathVars(ExecutableElement methodDoc) {
+        Collection<PathVar> retVal = new ArrayList<>();
 
-		Tag[] tags = methodDoc.tags(PATHVAR_TAG);
-		ParamTag[] paramTags = methodDoc.paramTags();
+        List<String> tags = getTags(methodDoc, PATHVAR_TAG, treeUtils);
+        Map<String, List<String>> paramTags = getParams(methodDoc, treeUtils);
 
-		for (Parameter parameter : methodDoc.parameters()) {
-			for (AnnotationDesc annotation : parameter.annotations()) {
-				String _name = getAnnotationName(annotation);
-				if (PATHVAR_ANNOTATION.contains(_name) ||PATHVAR_ANNOTATION.equals(_name)) {
-					String name = parameter.name();
-					Collection<String> values = getElementValue(annotation, "value");
-					if (!values.isEmpty())
-						name = values.iterator().next();
+        for (VariableElement parameter : methodDoc.getParameters()) {
+            for (AnnotationMirror annotation : parameter.getAnnotationMirrors()) {
+                if (getAnnotationName(annotation).equals(PATHVAR_ANNOTATION)) {
+                    String name = parameter.getSimpleName().toString();
+                    Collection<String> values = getElementValue(annotation, "value");
+                    if (!values.isEmpty()) {
+                        name = values.iterator().next();
+                    }
 
-					// first check for special tag, then check regular param
-					// tag, finally default to empty string
-					String text = findParamText(tags, name);
-					if (text == null)
-						text = findParamText(paramTags, parameter.name());
-					if (text == null)
-						text = "";
+                    //primeiro verifique a tag especial, a seguir verifique a tag de parâmetro regular e, por fim, o padrão é a string vazia
+                    String text = findParamText(tags, name);
+                    if (text == null) {
+                        String paramName = parameter.getSimpleName().toString();
+                        if (paramTags.containsKey(paramName) && !paramTags.get(paramName).isEmpty()) {
+                            text = paramTags.get(paramName).get(0);
+                        }
+                    }
+                    if (text == null) {
+                        text = "";
+                    }
+                    retVal.add(new PathVar(name, text, parameter.asType()));
+                }
+            }
+        }
 
-					retVal.add(new PathVar(name, text, parameter.type().qualifiedTypeName()));
-				}
-			}
-		}
+        return retVal;
+    }
 
-		return retVal;
-	}
+    @Override
+    protected Collection<QueryParam> generateQueryParams(ExecutableElement methodDoc) {
+        Collection<QueryParam> retVal = new ArrayList<>();
 
-	@Override
-	protected Collection<QueryParam> generateQueryParams(MethodDoc methodDoc) {
-		Collection<QueryParam> retVal = new ArrayList<QueryParam>();
+        List<String> tags = getTags(methodDoc, QUERYPARAM_TAG, treeUtils);
+        Map<String, List<String>> paramTags = getParams(methodDoc, treeUtils);
 
-		Tag[] tags = methodDoc.tags(QUERYPARAM_TAG);
-		ParamTag[] paramTags = methodDoc.paramTags();
+        for (VariableElement parameter : methodDoc.getParameters()) {
+            for (AnnotationMirror annotation : parameter.getAnnotationMirrors()) {
+                if (getAnnotationName(annotation).equals(PARAM_ANNOTATION)) {
+                    String name = parameter.getSimpleName().toString();
+                    List<String> values = getElementValue(annotation, "value");
+                    if (!values.isEmpty())
+                        name = values.get(0);
 
-		for (Parameter parameter : methodDoc.parameters()) {
-			for (AnnotationDesc annotation : parameter.annotations()) {
-				String _name = getAnnotationName(annotation);
-				if (PARAM_ANNOTATION.equals(_name) || PARAM_ANNOTATION.contains(_name)) {
-					String name = parameter.name();
-					List<String> values = getElementValue(annotation, "value");
-					if (!values.isEmpty())
-						name = values.get(0);
+                    List<String> requiredVals = getElementValue(annotation, "required");
 
-					List<String> requiredVals = getElementValue(annotation, "required");
+                    //Com a consulta de primavera, os parâmetros são necessários por padrão
+                    boolean required = TRUE;
+                    if (!requiredVals.isEmpty()) {
+                        required = Boolean.parseBoolean(requiredVals.get(0));
+                    }
 
-					// With spring query params are required by default
-					boolean required = TRUE;
-					if (!requiredVals.isEmpty())
-						required = Boolean.parseBoolean(requiredVals.get(0));
+                    //Com spring, se defaultValue for fornecido, "required" é definido como false automaticamente
+                    List<String> defaultVals = getElementValue(annotation, "defaultValue");
 
-					// With spring, if defaultValue is provided then "required"
-					// is set to false automatically
-					List<String> defaultVals = getElementValue(annotation, "defaultValue");
+                    if (!defaultVals.isEmpty()) {
+                        required = FALSE;
+                    }
 
-					if (!defaultVals.isEmpty())
-						required = FALSE;
+                    //primeiro verifique a tag especial, a seguir verifique a tag de parâmetro regular e, por fim, o padrão é a string vazia
+                    String text = findParamText(tags, name);
+                    if (text == null) {
+                        String paramName = parameter.getSimpleName().toString();
+                        if (paramTags.containsKey(paramName) && !paramTags.get(paramName).isEmpty()) {
+                            text = paramTags.get(paramName).get(0);
+                        }
+                    }
+                    if (text == null) {
+                        text = "";
+                    }
 
-					// first check for special tag, then check regular param
-					// tag, finally default to empty string
-					String text = findParamText(tags, name);
-					if (text == null) {
-						text = findParamText(paramTags, parameter.name());
-					}
-					if (text == null)
-						text = "";
+                    retVal.add(new QueryParam(name, required, text, parameter.asType()));
+                }
+            }
+        }
+        return retVal;
+    }
 
-					retVal.add(new QueryParam(name, required, text, parameter.type().qualifiedTypeName()));
-				}
-			}
-		}
-		return retVal;
-	}
+    @Override
+    protected RequestBody generateRequestBody(ExecutableElement methodDoc) {
 
-	@Override
-	protected RequestBody generateRequestBody(MethodDoc methodDoc) {
+        List<String> tags = getTags(methodDoc, REQUESTBODY_TAG, treeUtils);
+        Map<String, List<String>> paramTags = getParams(methodDoc, treeUtils);
 
-		Tag[] tags = methodDoc.tags(REQUESTBODY_TAG);
-		ParamTag[] paramTags = methodDoc.paramTags();
+        for (VariableElement parameter : methodDoc.getParameters()) {
+            for (AnnotationMirror annotation : parameter.getAnnotationMirrors()) {
+                if (getAnnotationName(annotation).equals(REQUESTBODY_ANNOTATION)) {
 
-		for (Parameter parameter : methodDoc.parameters()) {
-			for (AnnotationDesc annotation : parameter.annotations()) {
-				String _name = getAnnotationName(annotation);
-				if (REQUESTBODY_ANNOTATION.equals(_name) || REQUESTBODY_ANNOTATION.contains(_name)) {
+                    //primeiro verifique a tag especial, a seguir verifique a tag de parâmetro regular e, por fim, o padrão é a string vazia
+                    String text = (isEmpty(tags) ? null : tags.get(0));
+                    if (text == null) {
+                        String paramName = parameter.getSimpleName().toString();
+                        if (paramTags.containsKey(paramName) && !paramTags.get(paramName).isEmpty()) {
+                            text = paramTags.get(paramName).get(0);
+                        }
+                    }
+                    if (text == null) {
+                        text = "";
+                    }
 
-					// first check for special tag, then check regular param
-					// tag, finally default to empty string
-					String text = (isEmpty(tags) ? null : tags[0].text());
-					if (text == null)
-						text = findParamText(paramTags, parameter.name());
-					if (text == null)
-						text = "";
+                    return new RequestBody(parameter.getSimpleName().toString(), text, parameter.asType());
+                }
+            }
+        }
+        return null;
+    }
 
-					return new RequestBody(parameter.name(), text, parameter.type().qualifiedTypeName());
-				}
-			}
-		}
-		return null;
-	}
-
-	@Override
-	protected Collection<String> resolveHttpMethods(EndpointMapping classMapping, EndpointMapping methodMapping) {
-		// If there are no http methods defined simply use GET
-		return firstNonEmpty(super.resolveHttpMethods(classMapping, methodMapping), asList("GET"));
-	}
+    @Override
+    protected Collection<String> resolveHttpMethods(EndpointMapping classMapping, EndpointMapping methodMapping) {
+        //Se não houver métodos http definidos, basta usar GET
+        return firstNonEmpty(super.resolveHttpMethods(classMapping, methodMapping), asList("GET"));
+    }
 }

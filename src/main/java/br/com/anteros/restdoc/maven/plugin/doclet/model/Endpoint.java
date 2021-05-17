@@ -17,15 +17,19 @@ package br.com.anteros.restdoc.maven.plugin.doclet.model;
 
 import java.util.Collection;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Classe utilizada para representar o endpoint do controller
- * 
+ *
  * @author Edson Martins
- * @author Eduardo Albertini
  *
  */
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class Endpoint {
 
 	private String path;
@@ -38,6 +42,8 @@ public class Endpoint {
 	private String shortDescription;
 	private String description;
 	private String type;
+	@JsonIgnore
+	private TypeMirror typeMirror;
 
 	public Endpoint() {
 	}
@@ -52,7 +58,7 @@ public class Endpoint {
 			Collection<String> produces,
 			String shortDescription,
 			String description,
-			String type) {
+			TypeMirror typeMirror) {
 
 		this.path = path;
 		this.httpMethod = httpMethod;
@@ -63,8 +69,20 @@ public class Endpoint {
 		this.produces = produces;
 		this.shortDescription = shortDescription;
 		this.description = description;
-		this.type = type;
+		this.type = typeMirror.toString();
+		this.typeMirror = typeMirror;
 	}
+
+	@JsonIgnore
+	public TypeMirror getTypeMirror() {
+		return typeMirror;
+	}
+
+	@JsonIgnore
+	public void setTypeMirror(TypeMirror typeMirror) {
+		this.typeMirror = typeMirror;
+	}
+
 
 	public String getPath() {
 		return path;
@@ -109,56 +127,16 @@ public class Endpoint {
 	@Override
 	public String toString() {
 		return "Endpoint{" +
-				"path='" + path + '\'' + '\n' +
-				", httpMethod='" + httpMethod + '\'' + '\n' +
-				", queryParams=" + queryParams + '\n' +
-				", pathVars=" + pathVars + '\n' +
-				", requestBody=" + requestBody + '\n' +
-				", consumes=" + consumes + '\n' +
-				", produces=" + produces + '\n' +
-				", shortDescription='" + shortDescription + '\'' + '\n' +
-				", description='" + description + '\'' + '\n' +
+				"path='" + path + '\'' +
+				", httpMethod='" + httpMethod + '\'' +
+				", queryParams=" + queryParams +
+				", pathVars=" + pathVars +
+				", requestBody=" + requestBody +
+				", consumes=" + consumes +
+				", produces=" + produces +
+				", shortDescription='" + shortDescription + '\'' +
+				", description='" + description + '\'' +
 				'}';
-	}
-
-	public void setPath(String path) {
-		this.path = path;
-	}
-
-	public void setHttpMethod(String httpMethod) {
-		this.httpMethod = httpMethod;
-	}
-
-	public void setQueryParams(Collection<QueryParam> queryParams) {
-		this.queryParams = queryParams;
-	}
-
-	public void setPathVars(Collection<PathVar> pathVars) {
-		this.pathVars = pathVars;
-	}
-
-	public void setRequestBody(RequestBody requestBody) {
-		this.requestBody = requestBody;
-	}
-
-	public void setConsumes(Collection<String> consumes) {
-		this.consumes = consumes;
-	}
-
-	public void setProduces(Collection<String> produces) {
-		this.produces = produces;
-	}
-
-	public void setShortDescription(String shortDescription) {
-		this.shortDescription = shortDescription;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	@JsonIgnore

@@ -15,28 +15,34 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.doclet.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * Classe utilizada para representar os objetos vindos pelo corpo da requisição
  * 
  * @author Edson Martins
- * @author Eduardo Albertini
  *
  */
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.lang.model.type.TypeMirror;
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class RequestBody {
 
 	private String name;
 	private String description;
 	private String type;
+	@JsonIgnore
+	private TypeMirror typeMirror;
 
 	public RequestBody() {
 	}
 
-	public RequestBody(String name, String description, String type) {
+	public RequestBody(String name, String description, TypeMirror typeMirror) {
 		this.name = name;
 		this.description = description;
-		this.type = type;
+		this.typeMirror = typeMirror;
+		this.type = typeMirror.toString();
 	}
 
 	public String getName() {
@@ -51,6 +57,17 @@ public class RequestBody {
 		return type;
 	}
 
+
+	@JsonIgnore
+	public TypeMirror getTypeMirror() {
+		return typeMirror;
+	}
+
+	@JsonIgnore
+	public void setTypeMirror(TypeMirror typeMirror) {
+		this.typeMirror = typeMirror;
+	}
+
 	@JsonIgnore
 	public String getSimpleType() {
 		if (type == null)
@@ -61,20 +78,12 @@ public class RequestBody {
 		return type.substring(type.lastIndexOf(".") + 1);
 	}
 
+
 	@Override
 	public String toString() {
-		return "RequestBody{" + "name='" + name + '\'' + ", description='" + description + '\'' + '}';
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public void setType(String type) {
-		this.type = type;
+		return "RequestBody{" +
+				"name='" + name + '\'' +
+				", description='" + description + '\'' +
+				'}';
 	}
 }

@@ -235,7 +235,7 @@ public class JavadocUtil
     /**
      * Convenience method to wrap an argument value in single quotes (i.e. <code>'</code>). Intended for values
      * which may contain whitespaces.
-     * <br/>
+     * <br><br/>
      * To prevent javadoc error, the line separator (i.e. <code>\n</code>) are skipped.
      *
      * @param value the argument value.
@@ -568,7 +568,7 @@ public class JavadocUtil
 
     /**
      * Parse the output for 'javadoc -J-version' and return the javadoc version recognized.
-     * <br/>
+     * <br><br/>
      * Here are some output for 'javadoc -J-version' depending the JDK used:
      * <table>
      * <tr>
@@ -639,7 +639,7 @@ public class JavadocUtil
 
     /**
      * Parse a memory string which be used in the JVM arguments <code>-Xms</code> or <code>-Xmx</code>.
-     * <br/>
+     * <br><br/>
      * Here are some supported memory string depending the JDK used:
      * <table>
      * <tr>
@@ -869,7 +869,7 @@ public class JavadocUtil
     /**
      * Auto-detect the class names of the implementation of <code>com.sun.tools.doclets.Taglet</code> class from a
      * given jar file.
-     * <br/>
+     * <br><br/>
      * <b>Note</b>: <code>JAVA_HOME/lib/tools.jar</code> is a requirement to find
      * <code>com.sun.tools.doclets.Taglet</code> class.
      *
@@ -965,7 +965,7 @@ public class JavadocUtil
     /**
      * Invoke Maven for the given project file with a list of goals and properties, the output will be in the
      * invokerlog file.
-     * <br/>
+     * <br><br/>
      * <b>Note</b>: the Maven Home should be defined in the <code>maven.home</code> Java system property or defined in
      * <code>M2_HOME</code> system env variables.
      *

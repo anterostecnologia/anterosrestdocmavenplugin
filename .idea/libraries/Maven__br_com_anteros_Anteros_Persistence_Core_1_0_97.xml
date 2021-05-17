@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: br.com.anteros:Anteros-Persistence-Core:1.0.97">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/br/com/anteros/Anteros-Persistence-Core/1.0.97/Anteros-Persistence-Core-1.0.97.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/br/com/anteros/Anteros-Persistence-Core/1.0.97/Anteros-Persistence-Core-1.0.97-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/br/com/anteros/Anteros-Persistence-Core/1.0.97/Anteros-Persistence-Core-1.0.97-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

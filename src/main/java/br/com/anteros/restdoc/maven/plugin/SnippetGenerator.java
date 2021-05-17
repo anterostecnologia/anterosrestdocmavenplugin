@@ -141,7 +141,6 @@ import freemarker.template.TemplateNotFoundException;
 /**
  * 
  * @author Edson Martins
- * @author Eduardo Albertini
  *
  */
 public class SnippetGenerator {

@@ -15,20 +15,13 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.doclet.collector;
 
-import java.util.Collection;
-
-import com.sun.javadoc.RootDoc;
-
+import jdk.javadoc.doclet.DocletEnvironment;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.ClassDescriptor;
 
-/**
- * 
- * @author Edson Martins
- * @author Eduardo Albertini
- *
- */
+import java.util.Collection;
+
 public interface Collector {
 
-	Collection<ClassDescriptor> getDescriptors(RootDoc rootDoc);
+	Collection<ClassDescriptor> getDescriptors(DocletEnvironment rootDoc);
 
 }

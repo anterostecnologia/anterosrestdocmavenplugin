@@ -15,7 +15,10 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.doclet.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Classe utilizada para representar os query parâmetros vindos pela URL da requisição
@@ -24,21 +27,27 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author Eduardo Albertini
  *
  */
+
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class QueryParam {
 
 	private String name;
 	private boolean required;
 	private String description;
 	private String type;
+	@JsonIgnore
+	private TypeMirror typeMirror;
 
 	public QueryParam() {
 	}
 
-	public QueryParam(String name, boolean required, String description, String type) {
+	public QueryParam(String name, boolean required, String description, TypeMirror typeMirror) {
 		this.name = name;
 		this.required = required;
 		this.description = description;
-		this.type = type;
+		this.typeMirror = typeMirror;
+		this.type = typeMirror.toString();
 	}
 
 	public String getName() {
@@ -57,29 +66,15 @@ public class QueryParam {
 		return type;
 	}
 
-	@Override
-	public String toString() {
-		return "QueryParam{" +
-				"name='" + name + '\'' +
-				", required=" + required +
-				", description='" + description + '\'' +
-				'}';
+
+	@JsonIgnore
+	public TypeMirror getTypeMirror() {
+		return typeMirror;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setRequired(boolean required) {
-		this.required = required;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public void setType(String type) {
-		this.type = type;
+	@JsonIgnore
+	public void setTypeMirror(TypeMirror typeMirror) {
+		this.typeMirror = typeMirror;
 	}
 
 	@JsonIgnore
@@ -90,5 +85,14 @@ public class QueryParam {
 			return type;
 
 		return type.substring(type.lastIndexOf(".") + 1);
+	}
+
+	@Override
+	public String toString() {
+		return "QueryParam{" +
+				"name='" + name + '\'' +
+				", required=" + required +
+				", description='" + description + '\'' +
+				'}';
 	}
 }

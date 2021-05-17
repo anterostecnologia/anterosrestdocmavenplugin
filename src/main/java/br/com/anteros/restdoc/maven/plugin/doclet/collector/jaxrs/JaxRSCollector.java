@@ -14,42 +14,31 @@
  *  limitations under the License.
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.doclet.collector.jaxrs;
-
-import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getAnnotationName;
-import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getElementValue;
-import static br.com.anteros.restdoc.maven.plugin.util.CommonUtils.isEmpty;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.PATHVAR_TAG;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.QUERYPARAM_TAG;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.REQUESTBODY_TAG;
-import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.findParamText;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-
-import com.sun.javadoc.AnnotationDesc;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.ParamTag;
-import com.sun.javadoc.Parameter;
-import com.sun.javadoc.ProgramElementDoc;
-import com.sun.javadoc.Tag;
-
+import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.ParamTree;
+import com.sun.source.util.DocTrees;
 import br.com.anteros.restdoc.maven.plugin.doclet.collector.AbstractCollector;
 import br.com.anteros.restdoc.maven.plugin.doclet.collector.EndpointMapping;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.PathVar;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.QueryParam;
 import br.com.anteros.restdoc.maven.plugin.doclet.model.RequestBody;
 
-/**
- * Coletor de dados para projetos que utilizam o Framework Jax-RS
- * @see <a href="https://jax-rs-spec.java.net/">Framework Jax-RS</a>
- * 
- * @author Edson Martins
- * @author Eduardo Albertini
- *
- */
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+
+import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getAnnotationName;
+import static br.com.anteros.restdoc.maven.plugin.util.AnnotationUtils.getElementValue;
+import static br.com.anteros.restdoc.maven.plugin.util.TagUtils.*;
+import static br.com.anteros.restdoc.maven.plugin.util.CommonUtils.*;
+
 public class JaxRSCollector extends AbstractCollector {
 
 	protected static final String ANNOTATION_PACKAGE = "javax.ws.rs.";
@@ -68,32 +57,35 @@ public class JaxRSCollector extends AbstractCollector {
 	protected static final String PATHVAR_ANNOTATION = ANNOTATION_PACKAGE + "PathParam";
 	protected static final String PARAM_ANNOTATION = ANNOTATION_PACKAGE + "QueryParam";
 
+	public JaxRSCollector(DocTrees treeUtils) {
+		super(treeUtils);
+	}
+
 	@Override
-	protected boolean shouldIgnoreClass(ClassDoc classDoc) {
+	protected boolean shouldIgnoreClass(TypeElement classDoc) {
 
-		// Look for any JAXRS annotations in the class or the methods. If found
-		// then don't ignore this class.
-		for (AnnotationDesc classAnnotation : classDoc.annotations()) {
+		// Procure por quaisquer anotações JAXRS na classe ou nos métodos. Se for encontrado, não ignore esta classe.
+		for (AnnotationMirror classAnnotation : classDoc.getAnnotationMirrors()) {
 			String annotationName = getAnnotationName(classAnnotation);
-			if (annotationName != null && annotationName.startsWith(ANNOTATION_PACKAGE))
+			if (annotationName != null && annotationName.startsWith(ANNOTATION_PACKAGE)) {
 				return false;
-
+			}
 		}
 
-		for (MethodDoc methodDoc : classDoc.methods(true)) {
-			if (!shouldIgnoreMethod(methodDoc))
+		for (ExecutableElement methodDoc : getMethods(classDoc)) {
+			if (!shouldIgnoreMethod(methodDoc)) {
 				return false;
+			}
 		}
 
 		return true;
 	}
 
 	@Override
-	protected boolean shouldIgnoreMethod(MethodDoc methodDoc) {
+	protected boolean shouldIgnoreMethod(ExecutableElement methodDoc) {
 
-		// Jax RS methods need a method annotation inorder to be used, so simply
-		// look for them.
-		for (AnnotationDesc methodAnnotation : methodDoc.annotations()) {
+		// Os métodos Jax RS precisam de uma anotação de método para serem usados, portanto, basta procurá-los.
+		for (AnnotationMirror methodAnnotation : methodDoc.getAnnotationMirrors()) {
 			String annotationName = getAnnotationName(methodAnnotation);
 			if (GET_ANNOTATION.equals(annotationName) ||
 					POST_ANNOTATION.equals(annotationName) ||
@@ -107,14 +99,14 @@ public class JaxRSCollector extends AbstractCollector {
 	}
 
 	@Override
-	protected EndpointMapping getEndpointMapping(ProgramElementDoc doc) {
-		Collection<String> paths = new LinkedHashSet<String>();
-		Collection<String> httpMethods = new LinkedHashSet<String>();
-		Collection<String> consumes = new LinkedHashSet<String>();
-		Collection<String> produces = new LinkedHashSet<String>();
+	protected EndpointMapping getEndpointMapping(Element doc) {
+		Collection<String> paths = new LinkedHashSet<>();
+		Collection<String> httpMethods = new LinkedHashSet<>();
+		Collection<String> consumes = new LinkedHashSet<>();
+		Collection<String> produces = new LinkedHashSet<>();
 
-		// Look for a request mapping annotation
-		for (AnnotationDesc annotation : doc.annotations()) {
+		// Procure uma anotação de mapeamento de solicitação
+		for (AnnotationMirror annotation : doc.getAnnotationMirrors()) {
 
 			String annotationName = getAnnotationName(annotation);
 
@@ -139,33 +131,38 @@ public class JaxRSCollector extends AbstractCollector {
 				paths,
 				httpMethods,
 				consumes,
-				produces);
+				produces
+		);
 	}
 
 	@Override
-	protected Collection<PathVar> generatePathVars(MethodDoc methodDoc) {
-		Collection<PathVar> retVal = new ArrayList<PathVar>();
+	protected Collection<PathVar> generatePathVars(ExecutableElement methodDoc) {
+		Collection<PathVar> retVal = new ArrayList<>();
 
-		Tag[] tags = methodDoc.tags(PATHVAR_TAG);
-		ParamTag[] paramTags = methodDoc.paramTags();
+		List<String> tags = getTags(methodDoc, PATHVAR_TAG, treeUtils);
+		Map<String, List<String>> paramTags = getParams(methodDoc, treeUtils);
 
-		for (Parameter parameter : methodDoc.parameters()) {
-			for (AnnotationDesc annotation : parameter.annotations()) {
+		for (VariableElement parameter : methodDoc.getParameters()) {
+			for (AnnotationMirror annotation : parameter.getAnnotationMirrors()) {
 				if (getAnnotationName(annotation).equals(PATHVAR_ANNOTATION)) {
-					String name = parameter.name();
+					String name = parameter.getSimpleName().toString();
 					List<String> values = getElementValue(annotation, "value");
 					if (!values.isEmpty())
 						name = values.get(0);
 
-					// first check for special tag, then check regular param
-					// tag, finally default to empty string
+					// primeiro verifique a tag especial, depois verifique a tag de parâmetro regular, finalmente o padrão é a string vazia
 					String text = findParamText(tags, name);
-					if (text == null)
-						text = findParamText(paramTags, parameter.name());
-					if (text == null)
+					if (text == null) {
+						String paramName = parameter.getSimpleName().toString();
+						if (paramTags.containsKey(paramName) && !paramTags.get(paramName).isEmpty()) {
+							text = paramTags.get(paramName).get(0);
+						}
+					}
+					if (text == null) {
 						text = "";
+					}
 
-					retVal.add(new PathVar(name, text, parameter.type().qualifiedTypeName()));
+					retVal.add(new PathVar(name, text, parameter.asType()));
 				}
 			}
 		}
@@ -174,29 +171,33 @@ public class JaxRSCollector extends AbstractCollector {
 	}
 
 	@Override
-	protected Collection<QueryParam> generateQueryParams(MethodDoc methodDoc) {
-		Collection<QueryParam> retVal = new ArrayList<QueryParam>();
+	protected Collection<QueryParam> generateQueryParams(ExecutableElement methodDoc) {
+		Collection<QueryParam> retVal = new ArrayList<> ();
 
-		Tag[] tags = methodDoc.tags(QUERYPARAM_TAG);
-		ParamTag[] paramTags = methodDoc.paramTags();
+		List<String> tags = getTags(methodDoc, QUERYPARAM_TAG, treeUtils);
+		Map<String, List<String>> paramTags = getParams(methodDoc, treeUtils);
 
-		for (Parameter parameter : methodDoc.parameters()) {
-			for (AnnotationDesc annotation : parameter.annotations()) {
+		for (VariableElement parameter : methodDoc.getParameters()) {
+			for (AnnotationMirror annotation : parameter.getAnnotationMirrors()) {
 				if (getAnnotationName(annotation).equals(PARAM_ANNOTATION)) {
-					String name = parameter.name();
+					String name = parameter.getSimpleName().toString();
 					List<String> values = getElementValue(annotation, "value");
 					if (!values.isEmpty())
 						name = values.get(0);
 
-					// first check for special tag, then check regular param
-					// tag, finally default to empty string
+					// primeiro verifique a tag especial, depois verifique a tag de parâmetro regular, finalmente o padrão é a string vazia
 					String text = findParamText(tags, name);
-					if (text == null)
-						text = findParamText(paramTags, parameter.name());
-					if (text == null)
+					if (text == null) {
+						String paramName = parameter.getSimpleName().toString();
+						if (paramTags.containsKey(paramName) && !paramTags.get(paramName).isEmpty()) {
+							text = paramTags.get(paramName).get(0);
+						}
+					}
+					if (text == null) {
 						text = "";
+					}
 
-					retVal.add(new QueryParam(name, false, text, parameter.type().qualifiedTypeName()));
+					retVal.add(new QueryParam(name, false, text, parameter.asType()));
 				}
 			}
 		}
@@ -204,25 +205,28 @@ public class JaxRSCollector extends AbstractCollector {
 	}
 
 	@Override
-	protected RequestBody generateRequestBody(MethodDoc methodDoc) {
-		Tag[] tags = methodDoc.tags(REQUESTBODY_TAG);
-		ParamTag[] paramTags = methodDoc.paramTags();
+	protected RequestBody generateRequestBody(ExecutableElement methodDoc) {
+		List<String> tags = getTags(methodDoc, REQUESTBODY_TAG, treeUtils);
+		Map<String, List<String>> paramTags = getParams(methodDoc, treeUtils);
 
-		for (Parameter parameter : methodDoc.parameters()) {
+		for (VariableElement parameter : methodDoc.getParameters()) {
 
-			// TODO, need to double check this logic more.
-			// ignore anything in annotations and that starts with javax. Then
-			// just accept the first one.
-			if (isEmpty(parameter.annotations()) && !parameter.typeName().startsWith("javax.")) {
-				// first check for special tag, then check regular param tag,
-				// finally default to empty string
-				String text = (isEmpty(tags) ? null : tags[0].text());
-				if (text == null)
-					text = findParamText(paramTags, parameter.name());
-				if (text == null)
+			//TODO, precisa verificar essa lógica um pouco mais.
+			//ignore qualquer coisa nas anotações e que comece com javax. Então é só aceitar o primeiro.
+			if (isEmpty(parameter.getAnnotationMirrors()) && !parameter.asType().toString().startsWith("javax.")) {
+				//primeiro verifique a tag especial, a seguir verifique a tag de parâmetro regular e, por fim, o padrão é a string vazia
+				String text = (isEmpty(tags) ? null : tags.get(0));
+				if (text == null) {
+					String paramName = parameter.getSimpleName().toString();
+					if (paramTags.containsKey(paramName) && !paramTags.get(paramName).isEmpty()) {
+						text = paramTags.get(paramName).get(0);
+					}
+				}
+				if (text == null) {
 					text = "";
+				}
 
-				return new RequestBody(parameter.name(), text, parameter.type().qualifiedTypeName());
+				return new RequestBody(parameter.getSimpleName().toString(), text, parameter.asType());
 			}
 		}
 		return null;
@@ -230,7 +234,7 @@ public class JaxRSCollector extends AbstractCollector {
 
 	@Override
 	protected Collection<String> resolveHttpMethods(EndpointMapping classMapping, EndpointMapping methodMapping) {
-		// Only methods should have http methods.
+		//Apenas os métodos devem ter métodos http.
 		return methodMapping.getHttpMethods();
 	}
 }

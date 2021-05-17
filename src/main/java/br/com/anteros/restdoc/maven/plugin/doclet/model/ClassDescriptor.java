@@ -15,15 +15,11 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin.doclet.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 import java.util.Collection;
 
-/**
- * Classe utilizada para representar um controller
- * 
- * @author Edson Martins
- * @author Eduardo Albertini
- *
- */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class ClassDescriptor {
 
 	private String name;
@@ -58,28 +54,6 @@ public class ClassDescriptor {
 		return description;
 	}
 
-	@Override
-	public String toString() {
-		return "ClassDescriptor{" + "name='" + name + '\'' + ", contextPath='" + contextPath + '\'' + ", endpoints="
-				+ endpoints + ", description='" + description + '\'' + '}';
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setContextPath(String contextPath) {
-		this.contextPath = contextPath;
-	}
-
-	public void setEndpoints(Collection<Endpoint> endpoints) {
-		this.endpoints = endpoints;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
 
 	public String getClazzName() {
 		return clazzName;
@@ -87,5 +61,15 @@ public class ClassDescriptor {
 
 	public void setClazzName(String clazzName) {
 		this.clazzName = clazzName;
+	}
+
+	@Override
+	public String toString() {
+		return "ClassDescriptor{" +
+				"name='" + name + '\'' +
+				", contextPath='" + contextPath + '\'' +
+				", endpoints=" + endpoints +
+				", description='" + description + '\'' +
+				'}';
 	}
 }

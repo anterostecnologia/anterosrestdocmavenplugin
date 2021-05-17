@@ -15,26 +15,7 @@
  *******************************************************************************/
 package br.com.anteros.restdoc.maven.plugin;
 
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ANTEROS_JSON;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ANTEROS_JSONC_JAVADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.CLASSPATH_OPTION;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.DOCLET_OPTION;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.GENERAL;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.INTEGRATION;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_ADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_DATA_INTEGRATION_ADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_MOBILE_ADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_PERSISTENCE_ADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_PERSISTENCE_SECURITY_ADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.ITEMS_SECURITY_ADOC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.MOBILE;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.PROTECTED_OPTION;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SECURITY;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SOURCEPATH_OPTION;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.SPRING_WEB_CONTROLLER;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TARGET;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_INTEGRATION_PERSISTENCE_TOPIC;
-import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.TEMPLATE_MOBILE_PERSISTENCE_TOPIC;
+import static br.com.anteros.restdoc.maven.plugin.AnterosRestConstants.*;
 import static br.com.anteros.restdoc.maven.plugin.util.JavadocUtil.isNotEmpty;
 
 import java.io.File;
@@ -65,8 +46,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.spi.ToolProvider;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -259,6 +242,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
+
 		/**
 		 * Se não informar o nome do documento .adoc principal copiamos o padrão para a
 		 * pasta sourceDirectory.
@@ -310,7 +294,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 			}
 		}
 
-		String temporaryDirectoryJson = rootDir + File.separator + TARGET + File.separator + ANTEROS_JSONC_JAVADOC;
+
 
 		/**
 		 * Monta a lista de parâmetros que serão usados para ler a
@@ -329,8 +313,11 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 				sbSourcesPath.append(ds);
 			}
 		}
-		sbSourcesPath.append(File.pathSeparator).append(temporaryDirectoryJson);
 		parameters.add(sbSourcesPath.toString());
+		String defaultBaseDir = System.getProperty("java.io.tmpdir");
+        String temporaryDirectoryJson = defaultBaseDir + File.separator + ANTEROS_JSONC_JAVADOC;
+		File directory = new File(temporaryDirectoryJson);
+		directory.mkdirs();
 
 		if (packageScanEndpoints != null) {
 			for (String p : packageScanEndpoints) {
@@ -345,14 +332,17 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		parameters.add("-verbose");
 		parameters.add(CLASSPATH_OPTION);
 		parameters.add(getClassPath());
-
+		parameters.add(DOCLET_PATH);
+		parameters.add(getClassPath());
 		/**
 		 * Executa o javadoc para obter os comentários referente as classes que serão
 		 * geradas na documentação da API REST usando um Doclet customizado
 		 * (AnterosRestDoclet)
 		 */
-		
-		com.sun.tools.javadoc.Main.execute(parameters.toArray(new String[] {}));
+
+		ToolProvider javadoc = ToolProvider.findFirst("javadoc").orElseThrow();
+
+		javadoc.run(System.out,System.err,parameters.toArray(new String[] {}));
 
 		/**
 		 * Lê o arquivo JSON contendo informações sobre os endpoints lidos com o javadoc
@@ -475,7 +465,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			throw new MojoExecutionException("Não foi possível gerar a documentação da API Rest.", e);
+			throw new MojoExecutionException("Não foi possível gerar a documentação da API Rest. ", e);
 		}
 	}
 
