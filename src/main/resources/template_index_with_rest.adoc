@@ -525,6 +525,16 @@ include::itemsPersistence.adoc[]
 
 include::itemsPersistenceSecurity.adoc[]
 
+[[resources1]]
+== *Recursos REST*
+
+include::items.adoc[]
+
+[[resources2]]
+== *Recursos Segurança REST*
+
+include::itemsSecurity.adoc[]
+
 [[mobile]]
 == *Sincronismo Mobile*
 

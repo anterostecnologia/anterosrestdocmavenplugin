@@ -18,6 +18,7 @@ package br.com.anteros.restdoc.maven.plugin.doclet.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 import java.util.Collection;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class ClassDescriptor {
@@ -36,6 +37,21 @@ public class ClassDescriptor {
 		this.contextPath = contextPath;
 		this.endpoints = endpoints;
 		this.description = description;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ClassDescriptor that = (ClassDescriptor) o;
+		return name.equals(that.name) &&
+				description.equals(that.description) &&
+				clazzName.equals(that.clazzName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, description, clazzName);
 	}
 
 	public String getName() {

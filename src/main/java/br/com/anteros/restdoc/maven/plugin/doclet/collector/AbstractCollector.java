@@ -79,6 +79,7 @@ public abstract class AbstractCollector implements Collector {
 				TypeElement classDoc = (TypeElement) e;
 				ClassDescriptor descriptor = getClassDescriptor(classDoc);
 				if (descriptor != null && !isEmpty(descriptor.getEndpoints())) {
+					descriptor.setClazzName(classDoc.getQualifiedName().toString());
 					classDescriptors.add(descriptor);
 				}
 			}
@@ -95,14 +96,14 @@ public abstract class AbstractCollector implements Collector {
 	 */
 	protected ClassDescriptor getClassDescriptor(TypeElement classDoc) {
 
-		//If the ignore tag is present or this type of class should be ignored then simply ignore this class
+		// Se a tag ignore estiver presente ou este tipo de classe deve ser ignorado, simplesmente ignore esta classe
 		if (!isEmpty(getTags(classDoc, IGNORE_TAG, treeUtils)) || shouldIgnoreClass(classDoc)) {
 			return null;
 		}
 		String contextPath = getContextPath(classDoc);
 		Collection<Endpoint> endpoints = getAllEndpoints(contextPath, classDoc, getEndpointMapping(classDoc));
 
-		//If there are no endpoints then no use in providing documentation.
+		// Se não houver terminais, não adianta fornecer documentação.
 		if (isEmpty(endpoints)) {
 			return null;
 		}
@@ -119,7 +120,7 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Retrieves all the end point provided in the specified class doc.
+	 * Recupera todos os pontos finais fornecidos no documento de classe especificado.
 	 * @param contextPath
 	 * @param classDoc
 	 * @param classMapping
@@ -132,7 +133,7 @@ public abstract class AbstractCollector implements Collector {
 			endpoints.addAll(getEndpoint(contextPath, classMapping, method));
 		}
 
-		//Check super classes for inherited methods
+		//Verifique as superclasses para métodos herdados
 		TypeMirror superClass = classDoc.getSuperclass();
 		if (superClass != null && !(superClass instanceof NoType)) {
 			TypeElement te = asTypeElement(classDoc.getSuperclass());
@@ -144,9 +145,9 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Retrieves the endpoint for a single method.
+	 * Recupera o ponto de extremidade para um único método.
 	 *
-	 * If any method contains the special javadoc tag {@link br.com.anteros.restdoc.maven.plugin.doclet.util.TagUtils.IGNORE_TAG} it will be excluded.
+	 * Se algum método contém a tag especial javadoc {@link br.com.anteros.restdoc.maven.plugin.util.TagUtils.IGNORE_TAG} será excluído.
 	 * @param contextPath
 	 * @param classMapping
 	 * @param method
@@ -154,7 +155,7 @@ public abstract class AbstractCollector implements Collector {
 	 */
 	protected Collection<Endpoint> getEndpoint(String contextPath, EndpointMapping classMapping, ExecutableElement method) {
 
-		//If the ignore tag is present then simply return nothing for this endpoint.
+		//Se a tag de ignorar estiver presente, simplesmente não retorne nada para este terminal.
 		if (!isEmpty(getTags(method, IGNORE_TAG, treeUtils)) || shouldIgnoreMethod(method))
 			return emptyList();
 
@@ -192,9 +193,9 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will get the initial context path to use for all rest endpoint.
+	 * Obterá o caminho de contexto inicial a ser usado para todos os terminais restantes.
 	 *
-	 * This looks for the value in a special javadoc tag {@link br.com.anteros.restdoc.maven.plugin.doclet.util.TagUtils.CONTEXT_TAG}
+	 * Isso procura o valor em uma tag especial do javadoc {@link br.com.anteros.restdoc.maven.plugin.util.TagUtils.CONTEXT_TAG}
 	 *
 	 * @param classDoc
 	 * @return
@@ -208,9 +209,9 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will get the display name for the class.
+	 * Receberá o nome de exibição da classe.
 	 *
-	 * This looks for the value in a special javadoc tag {@link br.com.anteros.restdoc.maven.plugin.doclet.util.TagUtils.NAME_TAG}
+	 * Isso procura o valor em uma tag especial do javadoc {@link br.com.anteros.restdoc.maven.plugin.util.TagUtils.NAME_TAG}
 	 *
 	 * @param classDoc
 	 * @return
@@ -224,7 +225,7 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will get the description for the class.
+	 * Receberá a descrição da classe.
 	 * @param classDoc
 	 * @return
 	 */
@@ -233,9 +234,9 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will generate all the paths specified in the class and method mappings.
-	 * Each path should start with the context path, followed by one of the class paths,
-	 * then finally the method path.
+	 * Gerará todos os caminhos especificados nos mapeamentos de classe e método.
+	 * Cada caminho deve começar com o caminho do contexto, seguido por um dos caminhos da classe,
+	 * e, finalmente, o caminho do método.
 	 *
 	 * @param contextPath
 	 * @param classMapping
@@ -246,7 +247,7 @@ public abstract class AbstractCollector implements Collector {
 
 		contextPath = (contextPath == null ? "" : contextPath);
 
-		//Build all the paths based on the class level, plus the method extensions.
+		// Constrói todos os caminhos com base no nível da classe, mais as extensões do método.
 		LinkedHashSet<String> paths = new LinkedHashSet<>();
 
 		if (isEmpty(classMapping.getPaths())) {
@@ -268,8 +269,8 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will use the method's mapped information if it is not empty, otherwise it will use the class mapping information
-	 * to retrieve all the https methods.
+	 * Usará as informações mapeadas do método se não estiverem vazias, caso contrário, usará as informações de mapeamento da classe
+	 * para recuperar todos os métodos https.
 	 * @param classMapping
 	 * @param methodMapping
 	 * @return
@@ -282,8 +283,8 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will use the method's mapped information if it is not empty, otherwise it will use the class mapping information
-	 * to retrieve all the consumeable information.
+	 * Usará as informações mapeadas do método se não estiverem vazias, caso contrário, usará as informações de mapeamento da classe
+	 * para recuperar todas as informações consumíveis.
 	 * @param classMapping
 	 * @param methodMapping
 	 * @return
@@ -296,8 +297,8 @@ public abstract class AbstractCollector implements Collector {
 	}
 
 	/**
-	 * Will use the method's mapped information if it is not empty, otherwise it will use the class mapping information
-	 * to retrieve all the produceable information.
+	 * Usará as informações mapeadas do método se não estiverem vazias, caso contrário, usará as informações de mapeamento da classe
+	 * para recuperar todas as informações que podem ser produzidas.
 	 * @param classMapping
 	 * @param methodMapping
 	 * @return

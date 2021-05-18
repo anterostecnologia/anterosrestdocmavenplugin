@@ -32,6 +32,7 @@ public class AnterosRestConstants {
 	public static final String SPRING_WEB_CONTROLLER = "br.com.anteros.spring.web.resource";
 	public static final String PROTECTED_OPTION = "-protected";
 	public static final String SOURCEPATH_OPTION = "-sourcepath";
+	public static final String SUBPACKAGES_OPTION = "-subpackages";
 	public static final String CLASSPATH_OPTION = "-classpath";
 	public static final String DOCLET_PATH = "-docletpath";
 	public static final String DOCLET_OPTION = "-doclet";

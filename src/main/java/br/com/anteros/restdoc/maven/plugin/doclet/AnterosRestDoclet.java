@@ -112,7 +112,7 @@ public class AnterosRestDoclet implements Doclet, Comparator<ClassDescriptor> {
 
 		Configuration config = new Configuration(options);
 
-		List<ClassDescriptor> classDescriptors = new ArrayList<>();
+		Set<ClassDescriptor> classDescriptors = new LinkedHashSet<>();
 
 		final Collection<Collector> collectors = Arrays.<Collector>asList(
 				new SpringCollector(root.getDocTrees()),
@@ -152,24 +152,18 @@ public class AnterosRestDoclet implements Doclet, Comparator<ClassDescriptor> {
 		/**
 		 * Ordena as classes pelo nome
 		 */
-		Collections.sort(classDescriptors, this);
+		List<ClassDescriptor> newClassDescriptors = new ArrayList<>(classDescriptors);
+		Collections.sort(newClassDescriptors, this);
 
 		/**
 		 * Gera o arquivo json e escreve os dados no mesmo
 		 */
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-//		mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector(){
-//			@Override
-//			public boolean hasIgnoreMarker(AnnotatedMember m) {
-//				System.out.println(m.getRawType().getName());
-//				return m.getRawType().getName().contains("java") || super.hasIgnoreMarker(m);
-//			}
-//		});
 		try {
 			File file = new File(temporaryDirectoryJson);
 			FileOutputStream fos = new FileOutputStream(file);
-			mapper.writeValue(fos, classDescriptors.toArray(new ClassDescriptor[] {}));
+			mapper.writeValue(fos, newClassDescriptors.toArray(new ClassDescriptor[] {}));
 			fos.flush();
 			fos.close();
 
