@@ -36,16 +36,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.spi.ToolProvider;
 
 import org.apache.maven.artifact.Artifact;
@@ -152,6 +143,13 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	@Parameter(required = true)
 	private List<String> packageScanEntities = new ArrayList<String>();
 
+
+	/**
+	 * Nome dos pacotes onde estão os códigos fontes
+	 */
+	@Parameter(required = true)
+	private List<String> sourcePath = new ArrayList<String>();
+
 	/**
 	 * Base para gerar as URL de execução dos exemplos
 	 */
@@ -207,6 +205,12 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	private boolean includeTransitiveDependencySources;
 
 	/**
+	 * Verifica se deve gerar documentação Rest
+	 */
+	@Parameter(defaultValue = "true")
+	private boolean generateRest;
+
+	/**
 	 * Archiver manager
 	 */
 	@Component
@@ -240,6 +244,8 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 	private Map<String, String> anchorsMobile = new HashMap<>();
 	private Map<String, String> anchorsIntegration = new HashMap<>();
 
+	private Map<Class,List<JavaClass>> cacheEntities = new LinkedHashMap<>();
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 
@@ -250,7 +256,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		if (sourceDocumentName == null) {
 			sourceDocumentName = "index.adoc";
 			try {
-				InputStream openStream = ResourceUtils.getResourceAsStream("template_index.adoc");
+				InputStream openStream = ResourceUtils.getResourceAsStream(generateRest?"template_index_with_rest.adoc":"template_index.adoc");
 				if (!sourceDirectory.exists())
 					sourceDirectory.mkdirs();
 
@@ -319,13 +325,22 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		File directory = new File(temporaryDirectoryJson);
 		directory.mkdirs();
 
-		if (packageScanEndpoints != null) {
-			for (String p : packageScanEndpoints) {
+
+		if (sourcePath != null) {
+			parameters.add(SUBPACKAGES_OPTION);
+			sbSourcesPath = new StringBuilder();
+			boolean appendSeparator = false;
+			for (String p : sourcePath) {
 				if (p.contains("*"))
 					throw new MojoExecutionException("Pacotes não podem conter asteriscos(*) no nome " + p);
-				parameters.add(p);
+				if (appendSeparator)
+					sbSourcesPath.append(File.pathSeparator);
+				sbSourcesPath.append(p);
+				appendSeparator = true;
 			}
+			parameters.add(sbSourcesPath.toString());
 		}
+
 		parameters.add(SPRING_WEB_CONTROLLER);
 		parameters.add(DOCLET_OPTION);
 		parameters.add(AnterosRestDoclet.class.getName());
@@ -413,12 +428,15 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 				}
 			}
 
-			this.buildItemsPersistenceAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
-			this.buildItemsSecurityAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
-			this.buildItemsResourceAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
-			this.buildItemsResourceSecurityAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
-			this.buildMobileAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
-			this.buildDataIntegrationAdoc(classDescriptors.toArray(new ClassDescriptor[] {}), filePath);
+			ClassDescriptor[] descriptors = classDescriptors.toArray(new ClassDescriptor[]{});
+			this.buildItemsPersistenceAdoc(descriptors, filePath);
+			this.buildItemsSecurityAdoc(descriptors, filePath);
+			if (generateRest) {
+				this.buildItemsResourceAdoc(descriptors, filePath);
+				this.buildItemsResourceSecurityAdoc(descriptors, filePath);
+			}
+			this.buildMobileAdoc(descriptors, filePath);
+			this.buildDataIntegrationAdoc(descriptors, filePath);
 
 			
 
@@ -428,16 +446,17 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 			if (!attributes.containsKey("stylesheet")) {
 				File stylesheetFile = new File(filePath, "asciidoc_stylesheet.css");
-
-				try {
-					InputStream openStream = ResourceUtils.getResourceAsStream("asciidoc_stylesheet.css");
-					FileOutputStream fos = new FileOutputStream(stylesheetFile);
-					br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
-					fos.flush();
-					fos.close();
-					openStream.close();
-				} catch (IOException e) {
-					throw new MojoExecutionException("Não foi possível copiar o template padrão de CSS.", e);
+				if (!stylesheetFile.exists()) {
+					try {
+						InputStream openStream = ResourceUtils.getResourceAsStream("asciidoc_stylesheet.css");
+						FileOutputStream fos = new FileOutputStream(stylesheetFile);
+						br.com.anteros.core.utils.IOUtils.copy(openStream, fos);
+						fos.flush();
+						fos.close();
+						openStream.close();
+					} catch (IOException e) {
+						throw new MojoExecutionException("Não foi possível copiar o template padrão de CSS.", e);
+					}
 				}
 
 				this.attributes.put("stylesheet", stylesheetFile.getAbsolutePath());
@@ -738,6 +757,10 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 
 	private List<JavaClass> getAllClasses(boolean generateForAbstractClass, String sourcesToScanEntities,
 			List<URL> urls, Class<? extends Annotation> remoteClazz) throws IOException {
+
+		if (cacheEntities.containsKey(remoteClazz)) {
+			return cacheEntities.get(remoteClazz);
+		}
 		List<JavaClass> result = new ArrayList<JavaClass>();
 		URLClassLoader urlClassLoader = new URLClassLoader(urls.toArray(new URL[] {}),
 				Thread.currentThread().getContextClassLoader());
@@ -776,6 +799,7 @@ public class AnterosRestDocMojo extends AsciidoctorMojo {
 		
 		urlClassLoader.close();
 
+		cacheEntities.put(remoteClazz,result);
 		return result;
 	}
 
